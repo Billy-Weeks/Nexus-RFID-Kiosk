@@ -35,7 +35,7 @@ def read_root(request: Request):
     """
     return templates.TemplateResponse(request=request,
                                       name="index.html",
-                                      context={"message": "Welcome to the Kiosk"}) 
+                                      context={"status": "default","message": "Welcome to the Kiosk"}) 
 
 @app.post("/scan")
 def scan(request: Request, scanned_id: str = Form(...)):
@@ -47,7 +47,7 @@ def scan(request: Request, scanned_id: str = Form(...)):
         print(f"User found: {check.data[0]['first_name']} {check.data[0]['last_name']}") ## Test output
         return templates.TemplateResponse(request=request,
                                           name="index.html",
-                                          context={"status": "success", "message": f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}"})
+                                          context={"status": "success", "message": f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!"})
     else:
         print("User not found in database.")
         return templates.TemplateResponse(request=request, name="index.html", context={"status": "error", "message": "User not in database"})

@@ -8,15 +8,26 @@
 </head>
 
 <body>
-    <div class="kiosk-container">
+    <div class="kiosk-container {{ status }}">
         <h1>{{ message }}</h1>
+
+        {% if status == 'default' %}
         <p>Tap Card on Reader</p>
         <!--    Wrap input in a form so it can be used  -->
         <form action="/scan" method="post">
             <input type="password" id="rfid-input" name="scanned_id" autofocus>
         </form>
+
+        {% endif %}
     </div>
     
+{% if status != 'default' %}
+    <script>
+        setTimeout(function () {
+            window.location.href = '/';
+        }, 3500)
+    </script>
+{% endif %}
 </body>
 
 </html>
