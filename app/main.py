@@ -38,12 +38,16 @@ def read_root(request: Request):
                                       context={"message": "Welcome to the Kiosk"}) 
 
 @app.post("/scan")
-def scan(scanned_id: str = Form(...)):
+def scan(request: Request, scanned_id: str = Form(...)):
 
     ##  Checking to make sure the scanned ID is in the database already
     check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
 
     if check.data:
         print(f"User found: {check.data[0]['first_name']} {check.data[0]['last_name']}") ## Test output
+        return templates.TemplateResponse(request=request,
+                                          name="index.html",
+                                          context={"status": "success", "message": f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}"})
     else:
         print("User not found in database.")
+        return templates.TemplateResponse(request=request, name="index.html", context={"status": "error", "message": "User not in database"})
