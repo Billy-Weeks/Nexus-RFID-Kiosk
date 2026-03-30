@@ -1,1 +1,6 @@
-#    Insert requirements for project
+fastapi
+uvicorn
+jinja2
+supabase
+python-dotenv
+python-multipart
