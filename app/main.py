@@ -1,5 +1,5 @@
 import os ## For accessing environment variables/reading computer files
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
 from fastapi.staticfiles import StaticFiles ## For taking care of static files like CSS
 from supabase import create_client, Client ## For connecting to Supabase
@@ -36,3 +36,9 @@ def read_root(request: Request):
     return templates.TemplateResponse(request=request,
                                       name="index.html",
                                       context={"message": "Welcome to the Kiosk"}) 
+
+@app.post("/scan")
+def scan(scanned_id: str = Form(...)):
+    print(f"Scanned ID: {scanned_id}") ## Test output
+
+    return {"status": "success", "received_id": scanned_id} 

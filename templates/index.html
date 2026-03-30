@@ -11,7 +11,10 @@
     <div class="kiosk-container">
         <h1>{{ message }}</h1>
         <p>Tap Card on Reader</p>
-        <input type="password" id="rfid-input" autofocus />
+        <!--    Wrap input in a form so it can be used  -->
+        <form action="/scan" method="post">
+            <input type="password" id="rfid-input" name="scanned_id" autofocus>
+        </form>
     </div>
     
 </body>
