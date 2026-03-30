@@ -9,7 +9,7 @@ app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 
 ## Mount the static files directory to serve CSS and other static assets
-app.mount("/static", StaticFiles(directory="static"), name="static"
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 ##  Decorator for the root endpoint and then define 
