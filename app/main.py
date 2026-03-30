@@ -39,6 +39,11 @@ def read_root(request: Request):
 
 @app.post("/scan")
 def scan(scanned_id: str = Form(...)):
-    print(f"Scanned ID: {scanned_id}") ## Test output
 
-    return {"status": "success", "received_id": scanned_id} 
+    ##  Checking to make sure the scanned ID is in the database already
+    check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
+
+    if check.data:
+        print(f"User found: {check.data[0]['first_name']} {check.data[0]['last_name']}") ## Test output
+    else:
+        print("User not found in database.")
