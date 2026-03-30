@@ -1,6 +1,18 @@
+import os ## For accessing environment variables/reading computer files
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
 from fastapi.staticfiles import StaticFiles ## For taking care of static files like CSS
+from supabase import create_client, Client ## For connecting to Supabase
+from dotenv import load_dotenv ## For loading environment variables from .env file
+
+
+## Connecting to Supabase
+load_dotenv() ## Load environment variables from .env file
+
+url: str = os.environ.get("SUPABASE_URL") ## Get Supabase URL from environment variable
+key: str = os.environ.get("SUPABASE_KEY") ## Get Supabase Key from environment variable"
+
+supabase = create_client(url, key) ## Create Supabase client using the URL and Key
 
 ## Create FastAPI app
 app = FastAPI()
