@@ -79,3 +79,10 @@ def admin_setup(request: Request, a_pass: str = Form(...)):
         return templates.TemplateResponse(request=request,
                                       name="admin.html",
                                       context={"status": "error","message": "Incorrect password, try again."})
+
+@app.get("/event_name")
+def get_event_name(request: Request):
+    ##  Get the event name from the database
+    return templates.TemplateResponse(request=request,
+                                      name="event_name.html",
+                                      context={})
