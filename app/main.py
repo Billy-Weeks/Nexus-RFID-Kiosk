@@ -54,3 +54,10 @@ def scan(request: Request, scanned_id: str = Form(...)):
                                           context={"status": "success", "message": f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!"})
     else:
         return templates.TemplateResponse(request=request, name="index.html", context={"status": "error", "message": "User not in database"})
+
+##  Admin page information
+@app.get("/admin")
+def admin_logIn(request: Request):
+    return templates.TemplateResponse(request=request,
+                                      name="admin.html",
+                                      contex={})
