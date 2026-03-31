@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Event Name</title>
+
+</head>
+
+<body>
+
+    <div class="app-container">
+        <label for="event-name-input">Enter Event Name</label>
+        <form action="/event_name" method="post">
+            <input type="text" id="event-name-input" name="event_name" required autofocus placeholder="e.g. Kickoff Event" />
+            <br /><br />
+            <button type="submit">Start Event</button>
+        </form>
+
+    </div>
+</body>
+
+</html>
