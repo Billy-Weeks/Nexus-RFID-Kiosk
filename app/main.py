@@ -17,14 +17,17 @@ supabase = create_client(url, key) ## Create Supabase client using the URL and K
 ##  Grabbing app admin password
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
-## Create FastAPI app
+##  Create FastAPI app
 app = FastAPI()
 
-## Point Jinja to correct directory holding templates
+##  Point Jinja to correct directory holding templates
 templates = Jinja2Templates(directory="templates")
 
-## Mount the static files directory to serve CSS and other static assets
+##  Mount the static files directory to serve CSS and other static assets
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+##  Global event variable to hold the current event name, which can be updated by the admin
+current_name = ""
 
 
 ##  Decorator for the root endpoint and then define 
@@ -49,7 +52,7 @@ def scan(request: Request, scanned_id: str = Form(...)):
     if check.data:
 
         ##  Package data and update database: user_id
-        update = {"event_name": "Test event", "user_id": check.data[0]['user_id']}
+        update = {"event_name": current_name, "user_id": check.data[0]['user_id']}
         supabase.table('attendance_log').insert(update).execute()
 
         return templates.TemplateResponse(request=request,
@@ -86,3 +89,19 @@ def get_event_name(request: Request):
     return templates.TemplateResponse(request=request,
                                       name="event_name.html",
                                       context={})
+
+@app.post("/event_name")
+def post_event_name(request: Request, event_name: str = Form(...)):
+    ##  Update the event name in the database
+    ##  Progress to scanning page
+    global current_name 
+    current_name = event_name
+
+    if current_name:
+        return templates.TemplateResponse(request=request,
+                                      name="index.html",
+                                      context={"status": "default","message": f"Scanning for: {current_name}"}) 
+    else:
+        return templates.TemplateResponse(request=request,
+                                          name="event_name.html",
+                                          context={"status": "error", "message": "Please Enter A Valid Event Name"})

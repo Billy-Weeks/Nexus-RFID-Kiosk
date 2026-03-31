@@ -13,8 +13,14 @@
 <body>
 
     <div class="app-container">
-        <label for="event-name-input">Enter Event Name</label>
         <form action="/event_name" method="post">
+
+            {% if status == 'error' %}
+            <p class="error">{{ message }}</p>
+
+            {% endif %}
+
+            <label for="event-name-input">Enter Event Name</label>
             <input type="text" id="event-name-input" name="event_name" required autofocus placeholder="e.g. Kickoff Event" />
             <br /><br />
             <button type="submit">Start Event</button>
