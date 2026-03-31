@@ -40,7 +40,7 @@ body {
 }
 
 /*	Styling for individual buttons*/
-.dash-btn {
+.dash-btn, button {
     text-decoration: none;
     color: white;
     cursor: pointer;
