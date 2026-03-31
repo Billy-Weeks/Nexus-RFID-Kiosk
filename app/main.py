@@ -14,6 +14,9 @@ key: str = os.environ.get("SUPABASE_KEY") ## Get Supabase Key from environment v
 
 supabase = create_client(url, key) ## Create Supabase client using the URL and Key
 
+##  Grabbing app admin password
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+
 ## Create FastAPI app
 app = FastAPI()
 
@@ -53,7 +56,9 @@ def scan(request: Request, scanned_id: str = Form(...)):
                                           name="index.html",
                                           context={"status": "success", "message": f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!"})
     else:
-        return templates.TemplateResponse(request=request, name="index.html", context={"status": "error", "message": "User not in database"})
+        return templates.TemplateResponse(request=request,
+                                          name="index.html",
+                                          context={"status": "error", "message": "User not in database"})
 
 ##  Admin page information
 @app.get("/admin")
@@ -61,3 +66,16 @@ def admin_logIn(request: Request):
     return templates.TemplateResponse(request=request,
                                       name="admin.html",
                                       context={})
+
+@app.post("/admin-setup")
+def admin_setup(request: Request, a_pass: str = Form(...)):
+
+    ##  Check if the password entered matches the admin password
+    if a_pass == ADMIN_PASSWORD:
+        return templates.TemplateResponse(request=request,
+                                      name="dashboard.html",
+                                      context={})
+    else:
+        return templates.TemplateResponse(request=request,
+                                      name="admin.html",
+                                      context={"status": "error","message": "Incorrect password, try again."})
