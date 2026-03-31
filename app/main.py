@@ -44,6 +44,11 @@ def scan(request: Request, scanned_id: str = Form(...)):
     check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
 
     if check.data:
+
+        ##  Package data and update database: user_id
+        update = {"event_name": "Test event", "user_id": check.data[0]['user_id']}
+        supabase.table('attendance_log').insert(update).execute()
+
         return templates.TemplateResponse(request=request,
                                           name="index.html",
                                           context={"status": "success", "message": f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!"})
