@@ -44,10 +44,8 @@ def scan(request: Request, scanned_id: str = Form(...)):
     check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
 
     if check.data:
-        print(f"User found: {check.data[0]['first_name']} {check.data[0]['last_name']}") ## Test output
         return templates.TemplateResponse(request=request,
                                           name="index.html",
                                           context={"status": "success", "message": f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!"})
     else:
-        print("User not found in database.")
         return templates.TemplateResponse(request=request, name="index.html", context={"status": "error", "message": "User not in database"})
