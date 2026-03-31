@@ -10,8 +10,16 @@
 </head>
     
 <body>
-    <div class="app-container">
+    <div class="app-container {% if status == 'error' %}error{% endif %}">
         <form action="/admin-setup" method="post">
+
+            <!-- If status = error is sent-->
+            {% if status == 'error' %}
+
+            <p class="error">{{ message }}</p>
+            
+            {% endif %}
+            <br />
             <label for="admin-pass">Enter Password To Sign In</label>
             <br /><br />
             <input type="password" id="admin-pass" name="a_pass" required autofocus placeholder="Enter Password" />
