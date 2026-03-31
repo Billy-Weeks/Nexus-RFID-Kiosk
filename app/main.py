@@ -60,4 +60,4 @@ def scan(request: Request, scanned_id: str = Form(...)):
 def admin_logIn(request: Request):
     return templates.TemplateResponse(request=request,
                                       name="admin.html",
-                                      contex={})
+                                      context={})

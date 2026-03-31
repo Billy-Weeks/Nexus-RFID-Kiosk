@@ -12,7 +12,7 @@ body {
 }
 
 /*	Creating the style for the container in center of the screen*/
-.kiosk-container {
+.app-container {
 	text-align: center;
 	padding: 40px;
 	border: 2px solid #0000ff;
