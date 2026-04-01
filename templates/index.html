@@ -8,27 +8,60 @@
 </head>
 
 <body>
-    <div class="app-container {{ status }}">
-        <h1>{{ message }}</h1>
+    <div id="main-container" class="app-container {{ status }}">
+        <h1 id="status-message"> {{ message }}</h1>
 
-        {% if status == 'default' %}
+        <div id="input-area" style="display: {% if status == 'default' %}block{% else %}none{% endif %};">
 
-        <p>Tap Card on Reader</p>
-        <!--    Wrap input in a form so it can be used  -->
-        <form action="/scan" method="post">
-            <input type="password" id="rfid-input" name="scanned_id" required autofocus autocomplete="off" />
-        </form>
-        {% endif % }
+            <p>Tap Card on Reader</p>
+            <!--    Wrap input in a form so it can be used  -->
+            <form action="/scan" method="post">
+                <input type="password" id="rfid-input" name="scanned_id" required autofocus autocomplete="off" />
+            </form>
+        
+            </div>
+
 
     </div>
 
-    {% if status != 'default' %}
     <script>
+        console.log("===SCRIPT IS AWAKE AND LISTENING===");
+
+        let typingTimer;
+        const doneTypingInterval = 100;
+        const scanBox = document.getElementById('rfid-input');
+
+        if (scanBox) {
+            scanBox.addEventListener('input', function () {
+                clearTimeout(typingTimer);
+
+                typingTimer = setTimeout(() => {
+                    if (this.value.length > 0 && /^\d+$/.test(this.value)) {
+                        console.log("Scanner Finished. Submitting ID: ", this.value);
+                        this.form.submit();
+
+                    }
+                }, doneTypingInterval);
+            });
+        }
+
+
+        {% if status != 'default' %}
+
         setTimeout(function () {
-            window.location.href = '/scan';
+            document.getElementById('main-container').className = 'app-container default';
+            document.getElementById('status-message').innerText = 'Scanning for.... \n{{ event_name }}';
+            document.getElementById('input-area').style.display = 'block';
+
+
+            if (scanBox) {
+                scanBox.value = '';
+                scanBox.focus();
+            }
         }, 3500);
+        {% endif %}
     </script>
-    {% endif %}
+   
 
 </body>
 

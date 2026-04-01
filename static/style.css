@@ -59,7 +59,6 @@ body {
 	transform: translateY(-2px)
 }
 
-.hidden-ui {
-    position: absolute;
-	left: -10000px;
+#status-message {
+    white-space: pre-wrap;
 }

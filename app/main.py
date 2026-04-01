@@ -133,19 +133,9 @@ def scan_get(request: Request):
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303) ##   Redirects back to login page if user is not admin
 
-    ##  Check to see if scan is successful or error
-    if request.session.get("success"):
-        return templates.TemplateResponse(request=request,
-                                          name="index.html",
-                                          context={"status": "success", "message": request.session.pop("success", None)})
-    elif request.session.get("error"):
-        return templates.TemplateResponse(request=request,
-                                          name="index.html",
-                                          context={"status": "error","message": request.session.pop("error", None)})
-    else:
-        return templates.TemplateResponse(request=request,
-                                          name="index.html",
-                                          context={"status": "default", "message": f"Scanning for: {request.session.get('event_name')}"})
+    return templates.TemplateResponse(request=request,
+                                      name="index.html",
+                                      context={"status": "default", "message": f"Scanning for..... \n{request.session.get('event_name')}"})
 
 @app.post("/scan")
 def scan(request: Request, scanned_id: str = Form(...)):
@@ -169,10 +159,15 @@ def scan(request: Request, scanned_id: str = Form(...)):
         update = {"event_name": current_name, "user_id": check.data[0]['user_id']}
         supabase.table('attendance_log').insert(update).execute()
 
-        ##  Redirect back to scanning page and flash success message
-        request.session["success"] = f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!"
-        return RedirectResponse(url="/scan", status_code=303)
+        return templates.TemplateResponse(request=request,
+                                          name="index.html",
+                                          context={"status": "success",
+                                                   "message": f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!",
+                                                   "event_name": current_name})
+
     else:
-        ##  Redirect back to scanning page and flash error message
-        request.session["error"] = "User not in database."
-        return RedirectResponse(url="/scan", status_code=303)
+
+        return templates.TemplateResponse(request=request,
+                                          name="index.html",
+                                          context={"status": "error", "message": "User not in database.", "event_name": current_name})
+       
