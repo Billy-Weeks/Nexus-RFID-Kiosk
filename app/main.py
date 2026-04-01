@@ -1,3 +1,4 @@
+from math import e
 import os ## For accessing environment variables/reading computer files
 from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
@@ -47,9 +48,19 @@ def read_root(request: Request):
 ##  Admin page information
 @app.get("/admin")
 def admin_logIn(request: Request):
+
+    ##  Check to see if an "error" status has been stored
+    ##  Stores "" if no error message exists
+    err_msg = request.session.pop("error", "")
+
+    if err_msg:
+        current_status = "error"
+
+    else:
+        current_status = "default"
     return templates.TemplateResponse(request=request,
                                       name="admin.html",
-                                      context={"status": "error", "message": request.session.pop("error", None)})
+                                      context={"status": current_status, "message": err_msg})
 
 @app.post("/admin-setup")
 def admin_setup(request: Request, a_pass: str = Form(...)):
@@ -82,10 +93,18 @@ def get_event_name(request: Request):
     ## from accessing this page and changing the event name without permission)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303) ##   Redirects back to login page if user is not admin
+
+    ##  Check to see if an "error" status has been stored
+    err_msg = request.session.pop("error", "")
+
+    if err_msg:
+        current_status = "error"
+    else:
+        current_status = "default"
     ##  Get the event name from the database
     return templates.TemplateResponse(request=request,
                                       name="event_name.html",
-                                      context={"status": "error", "message":request.session.pop("error", None)})
+                                      context={"status": current_status, "message": err_msg})
 
 @app.post("/event_name")
 def post_event_name(request: Request, event_name: str = Form(...)):
