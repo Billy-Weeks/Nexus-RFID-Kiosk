@@ -17,6 +17,9 @@ supabase = create_client(url, key) ## Create Supabase client using the URL and K
 ##  Grabbing app admin password
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
+##  Grabbing special "escape" password to exit scanning mode
+ESCAPE_PASSWORD = os.environ.get("ESCAPE_PASSWORD")
+
 ##  Create FastAPI app
 app = FastAPI()
 
@@ -45,6 +48,12 @@ def read_root(request: Request):
 
 @app.post("/scan")
 def scan(request: Request, scanned_id: str = Form(...)):
+
+    ##  Check to make sure escape password wasn't inputted
+    if scanned_id == ESCAPE_PASSWORD:
+        return templates.TemplateResponse(request=request,
+                                          name="dashboard.html",
+                                          context={})
 
     ##  Checking to make sure the scanned ID is in the database already
     check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
@@ -95,7 +104,7 @@ def post_event_name(request: Request, event_name: str = Form(...)):
     ##  Update the event name in the database
     ##  Progress to scanning page
     global current_name 
-    current_name = event_name
+    current_name = event_name   
 
     if current_name:
         return templates.TemplateResponse(request=request,
@@ -105,3 +114,9 @@ def post_event_name(request: Request, event_name: str = Form(...)):
         return templates.TemplateResponse(request=request,
                                           name="event_name.html",
                                           context={"status": "error", "message": "Please Enter A Valid Event Name"})
+
+@app.get("/dashboard")
+def dash_page(request: Request):
+    return templates.TemplateResponse(request=request,
+                                      name="dashboard.html",
+                                      context={})
