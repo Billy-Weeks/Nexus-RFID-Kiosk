@@ -11,23 +11,42 @@
     <div class="app-container {{ status }}">
         <h1>{{ message }}</h1>
 
-        {% if status == 'default' %}
-        <p>Tap Card on Reader</p>
-        <!--    Wrap input in a form so it can be used  -->
-        <form action="/scan" method="post">
-            <input type="password" id="rfid-input" name="scanned_id" autofocus>
-        </form>
+        <div class="{% if status != 'default' %}hidden-ui{% endif %}">
+        
+            <p>Tap Card on Reader</p>
+            <!--    Wrap input in a form so it can be used  -->
+            <form action="/scan" method="post">
+                <input type="password" id="rfid-input" name="scanned_id" required autofocus autocomplete="off" />
+            </form>
+        </div>
 
-        {% endif %}
     </div>
     
-{% if status != 'default' %}
     <script>
+
+        const input = document.getElementById('rfid-input');
+
+        //  Focus the input field on page load
+        if (input && input.offsetLeft >=0) {
+            window.onload = () => input.focus();
+            //  Any clicks "offscreen" get pulled back to the input field
+            document.onclick = () => input.focus();
+
+            // Catch form submission
+            input.addEventListener('keydown', function(e) {
+                if (e.key == 'Enter') {
+                    this.form.submit();
+                }
+            });
+        }
+
+        {% if status != 'default' %}
         setTimeout(function () {
             window.location.href = '/scan';
-        }, 3500)
+        }, 3500);
+        {% endif %}
     </script>
-{% endif %}
+
 </body>
 
 </html>

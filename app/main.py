@@ -1,4 +1,3 @@
-from math import e
 import os ## For accessing environment variables/reading computer files
 from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
