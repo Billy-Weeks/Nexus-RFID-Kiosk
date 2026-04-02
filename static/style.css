@@ -79,6 +79,10 @@ body {
 	color: rgba(255, 255, 255, 0);
 }
 
+.hidden {
+	color: rgba(255, 255, 255, 0);
+}
+
 @keyframes pulse-glow {
 	0% {
 		/* Starting glow*/

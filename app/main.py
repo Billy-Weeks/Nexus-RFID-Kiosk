@@ -182,5 +182,17 @@ def logout(request: Request):
     request.session.clear() 
     return templates.TemplateResponse(request=request,
                                       name="logout.html",
-                                      context={"status": "log out", "message": "Signing out...."})
+                                      context={"status": "log out", "message": "Signing out ...."})
+
+@app.get("/end")
+def end_event(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    ##  Remove event name from .session dictionary to reset for next event
+    request.session.pop("event_name", None) 
+    return templates.TemplateResponse(request=request,
+                                      name="end.html",
+                                      context={"message": "Ending Event ...."})
        

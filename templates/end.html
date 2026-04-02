@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>End Event</title>
+
+</head>
+
+<body>
+    <h1 class="splash-screen">{{ message }}</h1>
+    <h1 class="splash-screen hidden" style="animation-delay: 6s;">Updating Database ....</h1>
+    <h1 class="splash-screen hidden" style="animation-delay: 12s;">Saving Data ....</h1>
+
+
+    <script>
+        setTimeout(function () {
+            window.location.href = "/dashboard";
+        }, 18000)
+    </script>
+
+</body>
+
+</html>
