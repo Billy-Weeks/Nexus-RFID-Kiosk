@@ -195,4 +195,10 @@ def end_event(request: Request):
     return templates.TemplateResponse(request=request,
                                       name="end.html",
                                       context={"message": "Ending Event ...."})
+
+@app.get("/add_users")
+def add_users(request: Request):
+    return templates.TemplateResponse(request=request,
+                                      name="add_users.html",
+                                      context={})
        
