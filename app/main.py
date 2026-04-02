@@ -34,7 +34,6 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 ##  Global event variable to hold the current event name, which can be updated by the admin
-current_name = ""
 
 
 ##  Decorator for the root endpoint and then define 
@@ -86,7 +85,7 @@ def dash_page(request: Request):
     if request.session.get("is_admin"):
         return templates.TemplateResponse(request=request,
                                       name="dashboard.html",
-                                      context={})   
+                                      context={"ev_name": request.session.get("event_name")})   
     else:
         return RedirectResponse(url="/admin", status_code=303)
 
@@ -118,12 +117,9 @@ def post_event_name(request: Request, event_name: str = Form(...)):
 
     ##  Update the event name in the database
     ##  Progress to scanning page
-    global current_name 
-    current_name = event_name   
+    request.session["event_name"]= event_name   
 
-    if current_name:
-        ##  Store event name in a session variable
-        request.session["event_name"] = current_name
+    if request.session.get("event_name"):
         return RedirectResponse(url="/scan", status_code=303)
 
     else:
@@ -160,20 +156,20 @@ def scan(request: Request, scanned_id: str = Form(...)):
 
     if check.data:
         ##  Package data and update database: user_id
-        update = {"event_name": current_name, "user_id": check.data[0]['user_id']}
+        update = {"event_name": request.session.get("event_name"), "user_id": check.data[0]['user_id']}
         supabase.table('attendance_log').insert(update).execute()
 
         return templates.TemplateResponse(request=request,
                                           name="index.html",
                                           context={"status": "success",
                                                    "message": f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!",
-                                                   "event_name": current_name})
+                                                   "event_name": request.session.get("event_name")})
 
     else:
 
         return templates.TemplateResponse(request=request,
                                           name="index.html",
-                                          context={"status": "error", "message": "User not in database.", "event_name": current_name})
+                                          context={"status": "error", "message": "User not in database.", "event_name": request.session.get("event_name")})
 
 @app.get("/logout")
 def logout(request: Request):

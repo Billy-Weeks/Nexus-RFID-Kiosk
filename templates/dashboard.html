@@ -16,10 +16,16 @@
         <h3>Please select an action below to begin:</h3>
 
         <!-- Creation of buttons to take to different pages-->
-        <!-- TODO: Add logic to flip event_name button to End Event
-                when an event is active -->
         <div class="button-stack">
+            
+            {% if ev_name %}
+            <a href="/placeholder" class="dash-btn">Stop Event</a>
+            
+            {% else %}
             <a href="/event_name" class="dash-btn">Start Event</a>
+            
+            {% endif %}
+
             <a href="/add_users" class="dash-btn">Add Users</a>
             <a href="/logout" class="dash-btn logout">Sign Out</a>
 
