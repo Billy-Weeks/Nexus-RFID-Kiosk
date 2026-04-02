@@ -11,7 +11,7 @@ from dotenv import load_dotenv ## For loading environment variables from .env fi
 load_dotenv() ## Load environment variables from .env file
 
 url: str = os.environ.get("SUPABASE_URL") ## Get Supabase URL from environment variable
-key: str = os.environ.get("SUPABASE_KEY") ## Get Supabase Key from environment variable"
+key: str = os.environ.get("SUPABASE_KEY") ## Get Supabase Key from environment variable
 
 supabase = create_client(url, key) ## Create Supabase client using the URL and Key
 
@@ -47,6 +47,10 @@ def read_root(request: Request):
 ##  Admin page information
 @app.get("/admin")
 def admin_logIn(request: Request):
+
+    ##  Check to see if admin is already logged in
+    if request.session.get("is_admin"):
+        return RedirectResponse(url="/dashboard", status_code=303)
 
     ##  Check to see if an "error" status has been stored
     ##  Stores "" if no error message exists
@@ -170,4 +174,17 @@ def scan(request: Request, scanned_id: str = Form(...)):
         return templates.TemplateResponse(request=request,
                                           name="index.html",
                                           context={"status": "error", "message": "User not in database.", "event_name": current_name})
+
+@app.get("/logout")
+def logout(request: Request):
+
+    ##  Check to see if user is admin (security measure to prevent malicious users
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+        
+    ## Clears the session dictionary, including event_name and is_admin to rest for next login/event
+    request.session.clear() 
+    return templates.TemplateResponse(request=request,
+                                      name="logout.html",
+                                      context={"status": "log out", "message": "Signing out...."})
        
