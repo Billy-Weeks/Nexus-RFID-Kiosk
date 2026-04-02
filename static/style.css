@@ -62,3 +62,48 @@ body {
 #status-message {
     white-space: pre-wrap;
 }
+
+.splash-screen {
+    font-size: 5rem;
+	position:absolute;
+    animation: pulse-glow 6s ease-in-out;
+    animation-fill-mode: forwards;
+}
+
+.goodbye-screen {
+	animation: fade-in 3s ease-in-out;
+	animation-delay: 6s;
+	animation-fill-mode: forwards;
+	font-size: 5rem;
+	position: absolute;
+	color: rgba(255, 255, 255, 0);
+}
+
+@keyframes pulse-glow {
+	0% {
+		/* Starting glow*/
+		text-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+		color: rgba(255, 255, 255, 0.0);
+	}
+	50% {
+		/* Max glow*/
+		text-shadow: 0 0 80px rgba(0, 212, 255, 0.6);
+		color: rgba(255, 255, 255, 1);
+	}
+	100% {
+		/* Back to start glow*/
+		text-shadow: 0 0 10px rgba(0, 212, 255, 0.0);
+		color: rgba(255, 255, 255, 0);
+	}
+}
+
+@keyframes fade-in {
+	0% {
+		text-shadow: 0 0 10px rgba(0, 212, 255, 0.0);
+		color: rgba(255, 255, 255, 0);
+	}
+	100% {
+		text-shadow: 0 0 80px rgba(0, 212, 255, 0.6);
+		color: rgba(255, 255, 255, 1);
+	}
+}
