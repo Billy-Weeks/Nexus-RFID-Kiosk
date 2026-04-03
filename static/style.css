@@ -83,6 +83,30 @@ body {
 	color: rgba(255, 255, 255, 0);
 }
 
+.input-fields {
+	//
+}
+
+.field-style {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.field-style label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: bold;
+}
+
+.field-style input {
+	width: 100%;
+	padding: 10px;
+	border-radius: 5px;
+	border: 1px solid #555;
+	background-color: #222;
+	color: white;
+}
+
 @keyframes pulse-glow {
 	0% {
 		/* Starting glow*/

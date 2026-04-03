@@ -1,4 +1,3 @@
-from curses import flash
 import os ## For accessing environment variables/reading computer files
 from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
@@ -228,6 +227,10 @@ def onsite_post(request: Request, scanned_id: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicious users)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code = 303)
+
+    ##  Check to make sure escape password wasn't inputted
+    if scanned_id == ESCAPE_PASSWORD:
+        return RedirectResponse(url="/add_users", status_code = 303)
 
     ##  Check to see if card id is already in the database
     checked = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
