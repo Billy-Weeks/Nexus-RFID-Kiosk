@@ -14,7 +14,7 @@
     <div id="main-container" class="app-container {{ status }}">
         <h1 id="status-message"> {{ message }}</h1>
 
-        <div id="input-area" style="display: {% if status == 'default' %}block{% else %}none{% endif %};"">
+        <div id="input-area" style="display: {% if status == 'default' %}block{% else %}none{% endif %};">
             <form action="/add_onsite" method="post">
                 <input type="password" id="scan_input" name="scanned_id" required autofocus autocomplete="off" />
             </form>
@@ -23,7 +23,7 @@
 
     </div>
 
-    <scipt>
+    <script>
 
         let currentStatus = "{{ status }}";
 
@@ -31,7 +31,7 @@
             setTimeout(function() {
                 document.getElementById("main-container").className = "app-container default";
 
-                document.getElementById("status_message").innerText = "Scan new card to begin ...";
+                document.getElementById("status-message").innerText = "Scan new card to begin ...";
 
                 document.getElementById("input-area").style.display = "block";
 
@@ -43,7 +43,7 @@
         }
 
 
-    </scipt>
+    </script>
 </body>
 
 </html>

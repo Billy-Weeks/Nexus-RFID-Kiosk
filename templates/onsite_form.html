@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Adding Onsite Form</title>
+
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <form action="/onsite_form" method="post">
+
+            <div class="input-fields">
+
+                <div class="field-style">
+
+                    <label for="first-name-input">First Name</label>
+                    <input type="text" id="first-name-input" name="first" required autofocus autocomplete="off" placeholder="Eddie" />
+
+                </div>
+
+                <div class="field-style">
+
+                    <label for="last-name-input">Last Name</label>
+                    <input type="text" id="last-name-input" name="last" required autocomplete="off" placeholder="the Golden Eagle" />
+
+                </div>
+
+                <div class="field-style">
+
+                    <label for="cin-input">CIN</label>
+                    <input type="text" id="cin-input" name="cin" required autocomplete="off" placeholder="1234567" />
+
+                </div>
+
+                <div class="field-style">
+
+                    <label for="email-input">Email</label>
+                    <input type="text" id="email-input" name="email" required autocomplete="off" placeholder="eeagle01@calstatela.edu" />
+
+                </div>
+
+                <div class="field-style">
+
+                    <label for="major">Major</label>
+                    <input type="text" id="major" name="major" required autocomplete="off" placeholder="Computer Science" />
+
+                </div>         
+
+            </div>
+
+            <button type="submit">Add to Database</button>
+
+        </form>
+
+    </div>
+
+</body>
+
+</html>
