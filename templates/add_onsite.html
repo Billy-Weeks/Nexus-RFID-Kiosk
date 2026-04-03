@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Adding Onsite</title>
+
+</head>
+
+<body>
+    <div id="main-container" class="app-container {{ status }}">
+        <h1 id="status-message"> {{ message }}</h1>
+
+        <div id="input-area" style="display: {% if status == 'default' %}block{% else %}none{% endif %};"">
+            <form action="/add_onsite" method="post">
+                <input type="password" id="scan_input" name="scanned_id" required autofocus autocomplete="off" />
+            </form>
+        </div>
+
+
+    </div>
+
+    <scipt>
+
+        let currentStatus = "{{ status }}";
+
+        if (currentStatus !== "default") {
+            setTimeout(function() {
+                document.getElementById("main-container").className = "app-container default";
+
+                document.getElementById("status_message").innerText = "Scan new card to begin ...";
+
+                document.getElementById("input-area").style.display = "block";
+
+                document.getElementById("scan_input").value = "";
+
+                document.getElementById("scan_input").focus();
+                
+            }, 3000);
+        }
+
+
+    </scipt>
+</body>
+
+</html>
