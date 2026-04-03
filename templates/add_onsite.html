@@ -25,6 +25,24 @@
 
     <script>
 
+        let typingTimer;
+        const doneTypingInterval = 100;
+        const scanBox = document.getElementById('scan_input');
+
+        if (scanBox) {
+            scanBox.addEventListener('input', function () {
+                clearTimeout(typingTimer);
+
+                typingTimer = setTimeout(() => {
+                    if (this.value.length > 0 && /^\d+$/.test(this.value)) {
+                        //console.log("Scanner Finished. Submitting ID: ", this.value);
+                        this.form.submit();
+
+                    }
+                }, doneTypingInterval);
+            });
+        }
+
         let currentStatus = "{{ status }}";
 
         if (currentStatus !== "default") {
