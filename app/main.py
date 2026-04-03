@@ -258,7 +258,7 @@ def onsite_form_get(request: Request):
 
 @app.post("/onsite_form")
 def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(...), cin: str = Form(...), email: str = Form(...), major: str = Form(...)):
-    ## Check to see if user is admin (security measure to prevent malicious users)
+    ##  Check to see if user is admin (security measure to prevent malicious users)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code = 303)
 
@@ -291,7 +291,7 @@ def bulk_import_get(request: Request):
 
 @app.post("/bulk_import")
 def bulk_import_post(request: Request, input_file: UploadFile = File(...)):
-    ## Check to see if user is admin (security measure to prevent malicisous users)
+    ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code = 303)
 
@@ -318,6 +318,50 @@ def bulk_import_post(request: Request, input_file: UploadFile = File(...)):
     ##  After parsing, add user information to database, using CIN column
     ##  to avoid duplicates "UPSERT" allows to use a column to check for duplicates, overrides
     ##  existing data with new data if duplicate is found
-    supabase.table('users').upsert(user, on_conflict='cin').execute()
+    supabase.table('input_list').upsert(user, on_conflict='cin').execute()
 
     return RedirectResponse(url="/batch_scan", status_code=303)
+
+@app.get("/batch_scan")
+def batch_scan_get(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicisous users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+    
+    ##  Retrieve unique "tag"/identifier to keep track of which users were recently uploaded
+    batch_tag = request.session.get('batch_tag')
+
+    ##  Pull out 1 row of data (essentially 1 users' information)
+    current_user = supabase.table('users').select('*').eq('upload_tag', batch_tag).is_('card_id', 'null').limit(1).execute()
+
+    if not current_user.data:
+        ##  If all users have been updated
+        request.session.pop('batch_tag', None)
+        return RedirectResponse(url="/add_users", status_code= 303)
+
+
+    ##  To grab count of remaining students
+    current_count = supabase.table('users').select('*', count='exact').eq('upload_tag', batch_tag).is_('card_id', 'null').execute()
+
+    message = request.session.pop("flash_msg", "")
+
+    
+    return templates.TemplateResponse(request=request,
+                                      name="batch_scan.html",
+                                      context={"user": current_user.data[0], "remaining": current_count.count, "message": message})
+
+@app.post("/batch_scan")
+def batch_scan_post(request: Request, cin: str = Form(...), scanned_id: str = Form(...)):
+    ##  Check to see if user is admin (security measure to prevent malicisous users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+
+    if scanned_id == ESCAPE_PASSWORD:
+        return RedirectResponse(url="/add_users", status_code = 303)
+
+    ##  Update database with card_id (scanned_id) using CIN as a reference
+    supabase.table('users').update({'card_id': scanned_id}).eq('cin', cin).execute()
+
+    request.session["flash_msg"] = f"Card Assigned to "
+
+    return RedirectResponse(url="/batch_scan", status_code = 303)
