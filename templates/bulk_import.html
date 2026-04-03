@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Adding Users in Bulk</title>
+
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <form action="/bulk_import" method="post" enctype="multipart/form-data">
+
+            <input type="file" accept=".csv" name="input_file" required />
+
+            <button type="submit">Upload CSV</button>
+
+        </form>
+    </div>
+</body>
+
+</html>
