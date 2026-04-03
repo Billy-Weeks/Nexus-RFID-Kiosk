@@ -227,3 +227,35 @@ def onsite_post(request: Request, scanned_id: str = Form(...)):
     ##  If card id is not in the database
     request.session["card_id"] = scanned_id
     return RedirectResponse(url="/onsite_form", status_code = 303)
+
+@app.get("/onsite_form")
+def onsite_form_get(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+    return templates.TemplateResponse(request=request,
+                                      name="onsite_form.html",
+                                      context={})
+
+@app.post("/onsite_form")
+def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(...), cin: str = Form(...), email: str = Form(...), major: str = Form(...)):
+    ## Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+
+    
+    ##  Just in case "somehow" a card wasn't scanned/stored
+    if not request.session.get("card_id"):
+        return RedirectResponse(url="/add_onsite", status_code = 303)
+
+
+    ##  Add form values to update dictionary
+    new_user = {"card_id": request.session.pop("card_id", None), "first_name": first,
+                "last_name": last, "cin": cin, "major": major, "email": email}
+    supabase.table('users').insert(new_user).execute()
+
+    ##  Create a flash message
+    request.session["flash_msg"] = f"{first} {last} has been successfully added to the database!"
+
+    ## redirect back to scanning page with success message
+    return RedirectResponse(url="/add_onsite", status_code = 303)
