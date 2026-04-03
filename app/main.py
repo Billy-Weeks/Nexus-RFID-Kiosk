@@ -318,7 +318,7 @@ def bulk_import_post(request: Request, input_file: UploadFile = File(...)):
     ##  After parsing, add user information to database, using CIN column
     ##  to avoid duplicates "UPSERT" allows to use a column to check for duplicates, overrides
     ##  existing data with new data if duplicate is found
-    supabase.table('input_list').upsert(user, on_conflict='cin').execute()
+    supabase.table('users').upsert(input_list, on_conflict='cin').execute()
 
     return RedirectResponse(url="/batch_scan", status_code=303)
 
