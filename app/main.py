@@ -362,6 +362,6 @@ def batch_scan_post(request: Request, cin: str = Form(...), scanned_id: str = Fo
     ##  Update database with card_id (scanned_id) using CIN as a reference
     supabase.table('users').update({'card_id': scanned_id}).eq('cin', cin).execute()
 
-    request.session["flash_msg"] = f"Card Assigned to "
+    request.session["flash_msg"] = f"Card Assigned"
 
     return RedirectResponse(url="/batch_scan", status_code = 303)

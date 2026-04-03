@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Batch Scanning</title>
+
+</head>
+
+<body>
+    <div id="main-container" class="app-container">
+        <h2>Scan Card for {{ user.first_name }} {{ user.last_name }}</h2>
+        <h3>Remaining Users needing to be scanned: {{ remaining }}</h3>
+
+        {% if message %}
+        <h3 class="success-text" style="color: #00ff00;">{{ message }}</h3>
+        {% endif %}
+
+
+
+        <div id="input-area">
+            <form action="/batch_scan" method="post">
+                <input type="password" id="scan_input" name="scanned_id" required autofocus autocomplete="off" />
+                <input type="hidden" name="cin" value="{{ user.cin }}" />
+            </form>
+        </div>
+
+
+    </div>
+
+    <script>
+
+        let typingTimer;
+        const doneTypingInterval = 100;
+        const scanBox = document.getElementById('scan_input');
+
+        if (scanBox) {
+            scanBox.addEventListener('input', function () {
+                clearTimeout(typingTimer);
+
+                typingTimer = setTimeout(() => {
+                    if (this.value.length > 0 && /^\d+$/.test(this.value)) {
+                        //console.log("Scanner Finished. Submitting ID: ", this.value);
+                        this.form.submit();
+
+                    }
+                }, doneTypingInterval);
+            });
+        }
+
+    </script>
+</body>
+
+</html>
