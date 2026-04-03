@@ -201,4 +201,29 @@ def add_users(request: Request):
     return templates.TemplateResponse(request=request,
                                       name="add_users.html",
                                       context={})
-       
+
+@app.get("/add_onsite")
+def onsite_get(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+    return templates.TemplateRespoonse(request=request,
+                                       name="add_onsite.html",
+                                       context={"status": "default", "message": "Scan new card to being ..."})
+
+@app.post("/add_onsite")
+def onsite_post(request: Request, scanned_id: str = Form(...)):  
+    ##  Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+
+    ##  Check to see if card id is already in the database
+    checked = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
+    
+    if checked.data:
+        return templates.TemplateResponse(request=request,
+                                          name="add_onsite.html",
+                                          context={"status": "error", "message": "Card id already exists ... Please scan another."})
+    ##  If card id is not in the database
+    request.session["card_id"] = scanned_id
+    return RedirectResponse(url="/onsite_form", status_code = 303)
