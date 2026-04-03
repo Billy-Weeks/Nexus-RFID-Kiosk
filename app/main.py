@@ -3,9 +3,13 @@ from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
 from fastapi.staticfiles import StaticFiles ## For taking care of static files like CSS
 from fastapi.responses import RedirectResponse ## For redirecting users to different pages
+from fastapi import File, UploadFile ## For handling CSV file uploads
 from starlette.middleware.sessions import SessionMiddleware ## Allows the app to uses "sessions" and remember information across different pages
 from supabase import create_client, Client ## For connecting to Supabase
 from dotenv import load_dotenv ## For loading environment variables from .env file
+import io ## Wrapping file data to look like file from local machine
+import csv ## Gives tools like csvDictReader
+import uuid ## Used to give batch tags to groups of data
 
 ## Connecting to Supabase
 load_dotenv() ## Load environment variables from .env file
@@ -274,3 +278,46 @@ def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(
 
     ## redirect back to scanning page with success message
     return RedirectResponse(url="/add_onsite", status_code = 303)
+
+@app.get("/bulk_import")
+def bulk_import_get(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+
+    return templates.TemplateResponse(request=request,
+                                      name="bulk_import.html",
+                                      context={})
+
+@app.post("/bulk_import")
+def bulk_import_post(request: Request, input_file: UploadFile = File(...)):
+    ## Check to see if user is admin (security measure to prevent malicisous users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+
+    ##  Take file, read it in byte form, decode from bytes to string, convert to 
+    ##  csvDictReader readable format and parse
+    file_in_bytes = input_file.file.read()
+
+    decoded_string = file_in_bytes.decode('utf-8')
+
+    input_data = csv.DictReader(io.StringIO(decoded_string))
+
+    input_list = list(input_data)
+
+    ##  "Tag" current data so it can be referenced later when adding card_id
+    curr_batch_tag = str(uuid.uuid4())
+
+    ##  Place into .session memory (cookies)
+    request.session['batch_tag'] = curr_batch_tag
+
+    ##  Add tag to each user in list
+    for user in input_list:
+        user["upload_tag"] = curr_batch_tag
+
+    ##  After parsing, add user information to database, using CIN column
+    ##  to avoid duplicates "UPSERT" allows to use a column to check for duplicates, overrides
+    ##  existing data with new data if duplicate is found
+    supabase.table('users').upsert(user, on_conflict='cin').execute()
+
+    return RedirectResponse(url="/batch_scan", status_code=303)
