@@ -1,3 +1,4 @@
+from curses import flash
 import os ## For accessing environment variables/reading computer files
 from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
@@ -207,9 +208,20 @@ def onsite_get(request: Request):
     ##  Check to see if user is admin (security measure to prevent malicious users)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303)
-    return templates.TemplateRespoonse(request=request,
+
+    ##  Added to see if flash message exists from successful user addition
+    flash_msg = request.session.pop("flash_msg", "")
+
+    if flash_msg:
+        current_status = "success"
+
+    else:
+        flash_msg = "Scan new card to begin ..."
+        current_status = "default"
+
+    return templates.TemplateResponse(request=request,
                                        name="add_onsite.html",
-                                       context={"status": "default", "message": "Scan new card to being ..."})
+                                       context={"status": current_status, "message": flash_msg})
 
 @app.post("/add_onsite")
 def onsite_post(request: Request, scanned_id: str = Form(...)):  
