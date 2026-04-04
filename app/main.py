@@ -44,8 +44,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 ##  the function that will be called when the root endpoint is accessed
 @app.get("/")
 def read_root(request: Request):
-    ##  Root endpoint... redirects to admin login page as main entry point of program
-    return RedirectResponse(url="/admin", status_code=303) 
+    ##  Root endpoint... works as "landing page" for program start-up
+
+    return templates.TemplateResponse(request=request,
+                                      name="landing.html",
+                                      context={})
 
 ##  Admin page information
 @app.get("/admin")
