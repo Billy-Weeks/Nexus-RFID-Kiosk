@@ -83,10 +83,6 @@ body {
 	color: rgba(255, 255, 255, 0);
 }
 
-.input-fields {
-	//
-}
-
 .field-style {
     margin-bottom: 20px;
     text-align: left;
@@ -105,6 +101,22 @@ body {
 	border: 1px solid #555;
 	background-color: #222;
 	color: white;
+}
+
+.landing-splash {
+	text-align: center;
+}
+
+.cinematic-title {
+	font-size: 5rem;
+	margin-bottom: 50px;
+	color: rgba(255,255,255,0);
+	animation: terminal-boot 3s ease-in-out forwards;
+}
+
+.cinematic-btn {
+	opacity: 0;
+	animation: button-reveal 2s ease-in-out 2.5s forwards;
 }
 
 @keyframes pulse-glow {
@@ -134,4 +146,18 @@ body {
 		text-shadow: 0 0 80px rgba(0, 212, 255, 0.6);
 		color: rgba(255, 255, 255, 1);
 	}
+}
+
+@keyframes terminal-boot {
+	0% {color: rgba(255, 255, 255, 0);
+		text-shadow: 0 0 0px rgba(0, 212, 255, 0);
+	}
+	100% {color: rgba(255, 255, 255, 1);
+		  text-shadow: 0 0 40px rgba(0, 212, 255, 0.6);
+	}
+}
+
+@keyframes button-reveal {
+	0% {opacityL 0;}
+	100% {opacity: 1;}
 }

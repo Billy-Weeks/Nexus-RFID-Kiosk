@@ -25,6 +25,9 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 ##  Grabbing special "escape" password to exit scanning mode
 ESCAPE_PASSWORD = os.environ.get("ESCAPE_PASSWORD")
 
+##  Grabbing club name, set up during initial startup
+CLUB_NAME = os.environ.get("CLUB_NAME")
+
 ##  Create FastAPI app
 app = FastAPI()
 
@@ -48,7 +51,7 @@ def read_root(request: Request):
 
     return templates.TemplateResponse(request=request,
                                       name="landing.html",
-                                      context={})
+                                      context={"club": CLUB_NAME})
 
 ##  Admin page information
 @app.get("/admin")
