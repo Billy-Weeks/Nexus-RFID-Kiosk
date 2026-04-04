@@ -17,7 +17,7 @@
         <h3>Remaining Users needing to be scanned: {{ remaining }}</h3>
 
         {% if message %}
-        <h3 class="success-text" style="color: #00ff00;">{{ message }}</h3>
+        <h3 id="flash-message" class="{{ status }}">{{ message }}</h3>
         {% endif %}
 
 
@@ -50,6 +50,14 @@
                     }
                 }, doneTypingInterval);
             });
+        }
+
+        const flashMsg = document.getElementById('flash-message');
+
+        if (flashMsg) {
+            setTimeout(() => {
+                flashMsg.style.display = 'none';
+            }, 3000);
         }
 
     </script>

@@ -344,11 +344,12 @@ def batch_scan_get(request: Request):
     current_count = supabase.table('users').select('*', count='exact').eq('upload_tag', batch_tag).is_('card_id', 'null').execute()
 
     message = request.session.pop("flash_msg", "")
+    status = request.session.pop("status", "")
 
     
     return templates.TemplateResponse(request=request,
                                       name="batch_scan.html",
-                                      context={"user": current_user.data[0], "remaining": current_count.count, "message": message})
+                                      context={"status": status, "user": current_user.data[0], "remaining": current_count.count, "message": message})
 
 @app.post("/batch_scan")
 def batch_scan_post(request: Request, cin: str = Form(...), scanned_id: str = Form(...)):
@@ -359,9 +360,18 @@ def batch_scan_post(request: Request, cin: str = Form(...), scanned_id: str = Fo
     if scanned_id == ESCAPE_PASSWORD:
         return RedirectResponse(url="/add_users", status_code = 303)
 
+    ##  Check to see if card has already been assigned
+    check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
+
+    if check.data:
+        request.session["flash_msg"] = "Card already assigned. Try another card"
+        request.session["status"] = "error"
+        return RedirectResponse(url="/batch_scan", status_code = 303)
+
     ##  Update database with card_id (scanned_id) using CIN as a reference
     supabase.table('users').update({'card_id': scanned_id}).eq('cin', cin).execute()
 
-    request.session["flash_msg"] = f"Card Assigned"
+    request.session["flash_msg"] = "Card Assigned"
+    request.session["status"] = "success"
 
     return RedirectResponse(url="/batch_scan", status_code = 303)
