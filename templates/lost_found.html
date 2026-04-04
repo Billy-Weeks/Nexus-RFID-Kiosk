@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Lost and Found</title>
+
+</head>
+
+<body>
+
+    <div id="main-container" class="app-container">
+        <h1>Lost and Found</h1>
+
+
+
+        <form action="/lost_found" method="post">
+          
+            <input type="password" id="scan_input" name="scanned_id" required autocomplete="off" autofocus placeholder="Scan Card" />
+
+        </form>
+
+        {% if message %}
+        <h2 id="flash-message" class="{{ status }}">{{ message }}</h2>
+        {% endif %}
+
+
+    </div>
+
+    <script>
+
+        /*Create variables: to act as "timer", max length of timer
+            grab the field we're timing*/
+        let typingTimer;
+        const doneTypingInterval = 100;
+        const scanBox = document.getElementById('scan_input')
+
+        if (scanBox) { // if there's any input in scanbox
+            scanBox.addEventListener('input', function () {
+                clearTimeout(typingTimer);
+
+                typingTimer = setTimeout(() => {
+                    if (this.value.length > 0 && /^\d+$/.test(this.value)) {
+                        this.form.submit();
+                    }
+                }, doneTypingInterval);
+            });
+        }
+        const flashMsg = document.getElementById('flash-message');
+
+        if (flashMsg) {
+            setTimeout(() => {
+
+                flashMsg.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+
+</body>
+
+</html>
