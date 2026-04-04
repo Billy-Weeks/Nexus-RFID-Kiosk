@@ -375,3 +375,41 @@ def batch_scan_post(request: Request, cin: str = Form(...), scanned_id: str = Fo
     request.session["status"] = "success"
 
     return RedirectResponse(url="/batch_scan", status_code = 303)
+
+@app.get("/lost_found")
+def lost_found_get(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicisous users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+
+    message = request.session.pop("flash_msg", "")
+    status = request.session.pop("status", "")
+
+    return templates.TemplateResponse(request=request,
+                                      name="lost_found.html",
+                                      context={"status": status, "message": message})
+
+@app.post("/lost_found")
+def lost_found_post(request: Request, scanned_id: str = Form(...)):
+    ##  Check to see if user is admin (security measure to prevent malicisous users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+
+    ##  Escape check
+    if scanned_id == ESCAPE_PASSWORD:
+        return RedirectResponse(url="/add_users", status_code = 303)
+
+    card = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
+
+
+    ##  If card isn't found in database (i.e. not assigned)
+    if not card.data:
+        request.session["flash_msg"] = "Card not found in database."
+        request.session["status"] = "error"
+
+        return RedirectResponse(url="/lost_found", status_code = 303)
+
+    request.session["flash_msg"] = f"Card belongs to {card.data[0]['first_name']} {card.data[0]['last_name']}"
+    request.session["status"] = "success"
+
+    return RedirectResponse(url="/lost_found", status_code = 303)
