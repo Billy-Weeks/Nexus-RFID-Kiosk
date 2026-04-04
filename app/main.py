@@ -11,13 +11,21 @@ import io ## Wrapping file data to look like file from local machine
 import csv ## Gives tools like csvDictReader
 import uuid ## Used to give batch tags to groups of data
 
+##  Temp setup password
+SETUP_PASS = "setup"
+
 ## Connecting to Supabase
 load_dotenv() ## Load environment variables from .env file
 
 url: str = os.environ.get("SUPABASE_URL") ## Get Supabase URL from environment variable
 key: str = os.environ.get("SUPABASE_KEY") ## Get Supabase Key from environment variable
 
-supabase = create_client(url, key) ## Create Supabase client using the URL and Key
+##  Check so that supabase doesn't attempt to conenct to a non-existent database
+if not os.path.exists(".env"):
+    supabase = None
+
+else:
+    supabase = create_client(url, key) ## Create Supabase client using the URL and Key
 
 ##  Grabbing app admin password
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
@@ -76,6 +84,11 @@ def admin_logIn(request: Request):
 
 @app.post("/admin-setup")
 def admin_setup(request: Request, a_pass: str = Form(...)):
+
+    if not os.path.exists(".env") and a_pass == SETUP_PASS:
+        ##  Create security flag so malicious users don't gain unwarranted access
+        request.session["is_setup"] = True
+        return RedirectResponse(url="/setup", status_code=303)
 
     ##  Check if the password entered matches the admin password
     if a_pass == ADMIN_PASSWORD:
@@ -419,3 +432,34 @@ def lost_found_post(request: Request, scanned_id: str = Form(...)):
     request.session["status"] = "success"
 
     return RedirectResponse(url="/lost_found", status_code = 303)
+
+@app.post("/setup")
+def setup(request: Request, name: str = Form(...), url: str = Form(...), key: str = Form(...),
+          admin: str = Form(...), escape: str = Form(...), session_secret: str = Form(...)):
+    ##  Check to see if user is admin (security measure to prevent malicisous users)
+    if not request.session.get("is_setup"):
+        return RedirectResponse(url="/admin", status_code = 303)
+
+    ##  Create .env file and write user chosen secret words
+    with open(".env", "w") as file:
+        file.write(f"""CLUB_NAME="{name}"
+SUPABASE_URL="{url}"
+SUPABASE_KEY="{key}"
+ADMIN_PASSWORD="{admin}"
+ESCAPE_PASSWORD="{escape}"
+SESSION_SECRET_KEY="{session_secret}"
+""")
+
+    load_dotenv(override=True) ##   Reload dotenv so that the newly created .env gets loaded
+
+    ##  Connection to previously created supabase database
+    db_url = os.environ.get("SUPABASE_URL")
+    db_key = os.environ.get("SUPABASE_KEY")
+
+    global supabase
+    create_client(db_url, db_key)
+
+    ##  Clear .session variables (security check)
+    request.session.clear()
+    return RedirectResponse(url="/admin", status_code=303)
+    
