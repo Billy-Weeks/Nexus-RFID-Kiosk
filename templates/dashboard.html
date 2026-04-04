@@ -17,17 +17,24 @@
 
         <!-- Creation of buttons to take to different pages-->
         <div class="button-stack">
-            
+
             {% if ev_name %}
             <a href="/end" class="dash-btn">Stop Event</a>
-            
+
             {% else %}
             <a href="/event_name" class="dash-btn">Start Event</a>
-            
+
             {% endif %}
 
             <a href="/add_users" class="dash-btn">Add Users</a>
             <a href="/logout" class="dash-btn logout">Sign Out</a>
+
+            <!-- Shutdown button -->
+            <form action="/shutdown_kiosk" method="post" style="display: inline;">
+
+                <button type="submit" class="dash-btn error">End Program</button>
+
+            </form>
 
         </div>
 
