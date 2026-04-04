@@ -419,3 +419,13 @@ def lost_found_post(request: Request, scanned_id: str = Form(...)):
     request.session["status"] = "success"
 
     return RedirectResponse(url="/lost_found", status_code = 303)
+
+    @app.post("/shutdown_kiosk")
+    def shutdown(request: Request):
+        ##  Check to see if user is admin (security measure to prevent malicisous users)
+        if not request.session.get("is_admin"):
+            return RedirectResponse(url="/admin", status_code = 303)
+
+        ##  Command to "kill" current chrome process
+        os.system("taskkill /IM chrome.exe /F")
+        return {"status": "Terminal Closed"}
