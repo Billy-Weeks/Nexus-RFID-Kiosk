@@ -10,6 +10,7 @@ from dotenv import load_dotenv ## For loading environment variables from .env fi
 import io ## Wrapping file data to look like file from local machine
 import csv ## Gives tools like csvDictReader
 import uuid ## Used to give batch tags to groups of data
+import secrets ## Used to create secret hash used in the app
 
 ##  Temp setup password
 SETUP_PASS = "setup"
@@ -435,10 +436,13 @@ def lost_found_post(request: Request, scanned_id: str = Form(...)):
 
 @app.post("/setup")
 def setup(request: Request, name: str = Form(...), url: str = Form(...), key: str = Form(...),
-          admin: str = Form(...), escape: str = Form(...), session_secret: str = Form(...)):
+          admin: str = Form(...), escape: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_setup"):
         return RedirectResponse(url="/admin", status_code = 303)
+
+    ##  Create hash to be written as SESSION_SECRET_KEY
+    session_secret = secrets.token_hex(32)
 
     ##  Create .env file and write user chosen secret words
     with open(".env", "w") as file:
@@ -457,7 +461,7 @@ SESSION_SECRET_KEY="{session_secret}"
     db_key = os.environ.get("SUPABASE_KEY")
 
     global supabase
-    create_client(db_url, db_key)
+    supabase = create_client(db_url, db_key)
 
     ##  Clear .session variables (security check)
     request.session.clear()
