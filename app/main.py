@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles ## For taking care of static files l
 from fastapi.responses import RedirectResponse ## For redirecting users to different pages
 from fastapi import File, UploadFile ## For handling CSV file uploads
 from starlette.middleware.sessions import SessionMiddleware ## Allows the app to uses "sessions" and remember information across different pages
-from supabase import create_client, Client ## For connecting to Supabase
+from supabase import create_client ## For connecting to Supabase
 from dotenv import load_dotenv ## For loading environment variables from .env file
 import io ## Wrapping file data to look like file from local machine
 import csv ## Gives tools like csvDictReader
