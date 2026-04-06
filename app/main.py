@@ -346,7 +346,7 @@ def bulk_import_post(request: Request, input_file: UploadFile = File(...)):
 def batch_scan_get(request: Request):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_admin"):
-        return RedirectResponse(url="/admin", status_code = 303)
+        return RedirectResponse(url="/admin", status_code=303)
     
     ##  Retrieve unique "tag"/identifier to keep track of which users were recently uploaded
     batch_tag = request.session.get('batch_tag')
@@ -357,7 +357,7 @@ def batch_scan_get(request: Request):
     if not current_user.data:
         ##  If all users have been updated
         request.session.pop('batch_tag', None)
-        return RedirectResponse(url="/add_users", status_code= 303)
+        return RedirectResponse(url="/add_users", status_code=303)
 
 
     ##  To grab count of remaining students
@@ -375,10 +375,10 @@ def batch_scan_get(request: Request):
 def batch_scan_post(request: Request, cin: str = Form(...), scanned_id: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_admin"):
-        return RedirectResponse(url="/admin", status_code = 303)
+        return RedirectResponse(url="/admin", status_code=303)
 
     if scanned_id == ESCAPE_PASSWORD:
-        return RedirectResponse(url="/add_users", status_code = 303)
+        return RedirectResponse(url="/add_users", status_code=303)
 
     ##  Check to see if card has already been assigned
     check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
@@ -386,7 +386,7 @@ def batch_scan_post(request: Request, cin: str = Form(...), scanned_id: str = Fo
     if check.data:
         request.session["flash_msg"] = "Card already assigned. Try another card"
         request.session["status"] = "error"
-        return RedirectResponse(url="/batch_scan", status_code = 303)
+        return RedirectResponse(url="/batch_scan", status_code=303)
 
     ##  Update database with card_id (scanned_id) using CIN as a reference
     supabase.table('users').update({'card_id': scanned_id}).eq('cin', cin).execute()
@@ -394,13 +394,13 @@ def batch_scan_post(request: Request, cin: str = Form(...), scanned_id: str = Fo
     request.session["flash_msg"] = "Card Assigned"
     request.session["status"] = "success"
 
-    return RedirectResponse(url="/batch_scan", status_code = 303)
+    return RedirectResponse(url="/batch_scan", status_code=303)
 
 @app.get("/lost_found")
 def lost_found_get(request: Request):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_admin"):
-        return RedirectResponse(url="/admin", status_code = 303)
+        return RedirectResponse(url="/admin", status_code=303)
 
     message = request.session.pop("flash_msg", "")
     status = request.session.pop("status", "")
@@ -413,11 +413,11 @@ def lost_found_get(request: Request):
 def lost_found_post(request: Request, scanned_id: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_admin"):
-        return RedirectResponse(url="/admin", status_code = 303)
+        return RedirectResponse(url="/admin", status_code=303)
 
     ##  Escape check
     if scanned_id == ESCAPE_PASSWORD:
-        return RedirectResponse(url="/add_users", status_code = 303)
+        return RedirectResponse(url="/add_users", status_code=303)
 
     card = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
 
@@ -427,19 +427,19 @@ def lost_found_post(request: Request, scanned_id: str = Form(...)):
         request.session["flash_msg"] = "Card not found in database."
         request.session["status"] = "error"
 
-        return RedirectResponse(url="/lost_found", status_code = 303)
+        return RedirectResponse(url="/lost_found", status_code=303)
 
     request.session["flash_msg"] = f"Card belongs to {card.data[0]['first_name']} {card.data[0]['last_name']}"
     request.session["status"] = "success"
 
-    return RedirectResponse(url="/lost_found", status_code = 303)
+    return RedirectResponse(url="/lost_found", status_code=303)
 
 
 @app.post("/shutdown_kiosk")
 def shutdown(request: Request):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_admin"):
-        return RedirectResponse(url="/admin", status_code = 303)
+        return RedirectResponse(url="/admin", status_code=303)
 
     ##  Command to "kill" current chrome process
     os.system("taskkill /IM chrome.exe /F")
@@ -451,7 +451,7 @@ def setup(request: Request, name: str = Form(...), url: str = Form(...), key: st
           admin: str = Form(...), escape: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_setup"):
-        return RedirectResponse(url="/admin", status_code = 303)
+        return RedirectResponse(url="/admin", status_code=303)
 
     ##  Create hash to be written as SESSION_SECRET_KEY
     session_secret = secrets.token_hex(32)
@@ -478,4 +478,13 @@ SESSION_SECRET_KEY="{session_secret}"
     ##  Clear .session variables (security check)
     request.session.clear()
     return RedirectResponse(url="/admin", status_code=303)
+
+@app.get("/sign_out")
+def sign_out(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicisous users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
     
+    return templates.TemplateResponse(request=request,
+                                      name="sign_out.html",
+                                      context={})
