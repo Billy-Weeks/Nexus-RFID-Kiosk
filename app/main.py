@@ -481,10 +481,6 @@ SESSION_SECRET_KEY="{session_secret}"
 
 @app.get("/sign_out")
 def sign_out(request: Request):
-    ##  Check to see if user is admin (security measure to prevent malicisous users)
-    if not request.session.get("is_admin"):
-        return RedirectResponse(url="/admin", status_code=303)
-    
     return templates.TemplateResponse(request=request,
                                       name="sign_out.html",
                                       context={})
