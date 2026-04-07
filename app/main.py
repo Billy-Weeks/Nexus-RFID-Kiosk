@@ -11,6 +11,7 @@ import io ## Wrapping file data to look like file from local machine
 import csv ## Gives tools like csvDictReader
 import uuid ## Used to give batch tags to groups of data
 import secrets ## Used to create secret hash used in the app
+import signal ## Used to send signals (specifically "kill" signal)
 
 ##  Temp setup password
 SETUP_PASS = "setup"
@@ -441,6 +442,10 @@ def shutdown(request: Request, admin_pass: str = Form(...)):
     if admin_pass == ADMIN_PASSWORD:
         ##  Command to "kill" current chrome process
         os.system("taskkill /IM chrome.exe /F")
+
+        current_pid = os.getpid()
+
+        os.kill(current_pid, signal.SIGTERM)
         return {"status": "Terminal Closed"}
     else:
         return RedirectResponse(url="/sign_out?error=invalid", status_code=303)
