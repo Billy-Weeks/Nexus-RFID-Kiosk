@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Session Exited</title>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        {% if message %}
+        <h3 style="color:red;">{{ message }}</h3>
+        {% endif %}
+
+        <h1>Session Cleared</h1>
+
+        <div class="button-stack">
+
+            <a href="/admin" class="dash-btn">Sign in again</a>
+
+            <button type="button" class="dash-btn error" onclick="showModal()">Shutdown Kiosk</button>
+
+
+        </div>
+
+
+    </div>
+
+    <div id="password-modal">
+            
+        <form action="/shutdown_kiosk" method="post">
+
+            <input type="password" name="admin_pass" id="modal-pass-input" required autofocus placeholder="Enter password" />
+
+            <div class="button-stack">
+
+            <button type="submit" class="dash-btn error">Confirm Shutdown</button>
+            <button type="button" class="dash-btn" onclick="hideModal()">Cancel</button>
+
+            </div>
+
+        </form>
+
+    </div>
+    <script>
+
+        const modalBox = document.getElementById("password-modal");
+
+        function showModal() {
+            modalBox.style.display = "block";
+            document.getElementById("modal-pass-input").focus();
+        }
+
+        function hideModal() {
+            modalBox.style.display = "none";
+        }
+
+    </script>
+
+</body>
+
+
+</html>

@@ -436,14 +436,14 @@ def lost_found_post(request: Request, scanned_id: str = Form(...)):
 
 
 @app.post("/shutdown_kiosk")
-def shutdown(request: Request):
+def shutdown(request: Request, admin_pass: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
-    if not request.session.get("is_admin"):
-        return RedirectResponse(url="/admin", status_code=303)
-
-    ##  Command to "kill" current chrome process
-    os.system("taskkill /IM chrome.exe /F")
-    return {"status": "Terminal Closed"}
+    if admin_pass == ADMIN_PASSWORD:
+        ##  Command to "kill" current chrome process
+        os.system("taskkill /IM chrome.exe /F")
+        return {"status": "Terminal Closed"}
+    else:
+        return RedirectResponse(url="/sign_out?error=invalid", status_code=303)
 
 
 @app.post("/setup")
@@ -481,6 +481,11 @@ SESSION_SECRET_KEY="{session_secret}"
 
 @app.get("/sign_out")
 def sign_out(request: Request):
+    error_flag = request.query_params.get("error")
+
+    err_msg = ""
+    if error_flag == "invalid":
+        err_msg = "Incorrect Admin Password"
     return templates.TemplateResponse(request=request,
                                       name="sign_out.html",
-                                      context={})
+                                      context={"message": err_msg})
