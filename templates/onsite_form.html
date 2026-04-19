@@ -21,14 +21,14 @@
                 <div class="field-style">
 
                     <label for="first-name-input">First Name</label>
-                    <input type="text" id="first-name-input" name="first" required autofocus autocomplete="off" placeholder="Eddie" />
+                    <input type="text" id="first-name-input" name="first" required autofocus autocomplete="off" placeholder="Eddie" value="{{ first }}" />
 
                 </div>
 
                 <div class="field-style">
 
                     <label for="last-name-input">Last Name</label>
-                    <input type="text" id="last-name-input" name="last" required autocomplete="off" placeholder="the Golden Eagle" />
+                    <input type="text" id="last-name-input" name="last" required autocomplete="off" placeholder="the Golden Eagle" value="{{ last }}"/>
 
                 </div>
 
@@ -42,24 +42,40 @@
                 <div class="field-style">
 
                     <label for="email-input">Email</label>
-                    <input type="text" id="email-input" name="email" required autocomplete="off" placeholder="eeagle01@calstatela.edu" />
+                    <input type="text" id="email-input" name="email" required autocomplete="off" placeholder="eeagle01@calstatela.edu" value="{{ email }}"/>
 
                 </div>
 
                 <div class="field-style">
 
                     <label for="major">Major</label>
-                    <input type="text" id="major" name="major" required autocomplete="off" placeholder="Computer Science" />
+                    <input type="text" id="major" name="major" required autocomplete="off" placeholder="Computer Science" value="{{ major }}" />
 
                 </div>         
 
             </div>
+
+            <!--Additional error message in case CIN is already inputted-->
+            {% if message %}
+                <h2 id="flash-message" class="{{ status }}">{{ message }}</h2>
+            {% endif %}
 
             <button type="submit">Add to Database</button>
 
         </form>
 
     </div>
+
+    <script>
+        /* Script to "turn off" error message and styling */
+
+        const flashMsg = document.getElementById('flash-message');
+        if (flashMsg) {
+            setTimeout(() => {
+                flashMsg.style.display = 'none';
+            }, 3000);
+        }
+    </script>
 
 </body>
 

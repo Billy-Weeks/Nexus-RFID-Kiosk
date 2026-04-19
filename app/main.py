@@ -273,9 +273,22 @@ def onsite_form_get(request: Request):
     ##  Check to see if user is admin (security measure to prevent malicious users)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code = 303)
+
+    ##  Unpack .session variables (if populated)
+    first = request.session.pop("first", "")
+    last = request.session.pop("last", "")
+    email = request.session.pop("email", "")
+    major = request.session.pop("major", "")
+    message = request.session.pop("flash_msg", "")
+    status = request.session.pop("status", "")
+
+    ##  Return variables so fields can be filled out
+    ##  Makes it look like nothing happened
     return templates.TemplateResponse(request=request,
-                                      name="onsite_form.html",
-                                      context={})
+                                        name="onsite_form.html",
+                                        context={'first': first, 'last': last,
+                                                'email': email, 'major': major,
+                                                'status': status, 'message': message})
 
 @app.post("/onsite_form")
 def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(...), cin: str = Form(...), email: str = Form(...), major: str = Form(...)):
@@ -288,6 +301,21 @@ def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(
     if not request.session.get("card_id"):
         return RedirectResponse(url="/add_onsite", status_code = 303)
 
+    ##  Security check to ensure CIN, which needs to be unique, hasn't already been used
+    cin_exists = supabase.table('users').select('*').eq('cin', cin).execute()
+
+    if cin_exists.data:
+        ##  Set up error message to be presented to User
+        request.session["flash_msg"] = "CIN already in database. Double check number"
+        request.session["status"] = "error"
+
+        ##  Prepare valid data to be retransmitted without user having to do it
+        request.session['first'] = first
+        request.session['last'] = last
+        request.session['email'] = email
+        request.session['major'] = major
+
+        return RedirectResponse(url="/onsite_form", status_code=303)
 
     ##  Add form values to update dictionary
     new_user = {"card_id": request.session.pop("card_id", None), "first_name": first,
