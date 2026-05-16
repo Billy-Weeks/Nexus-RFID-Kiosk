@@ -7,21 +7,31 @@ import time ##  Give ability to "sleep"
 ##  common phrase that is OS dependent  
 operating_system = sys.platform
 
+##  Command to spin up server
+subprocess.Popen(["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"])
+
+##  Variable for localhost link
+link = "http://localhost:8000"
+
+##  Brief pause so server can start completely
+time.sleep(4)
 
 if operating_system == "win32":
     print ("Starting Windows Launcher")
-    ##  Command to spin up server
-    subprocess.Popen(["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"], shell=True)
-    
-    ##  Brief pause so server can start completely
-    time.sleep(4)
 
     ##  Start up app in "kiosk" mode
-    subprocess.Popen(["start", "chrome", "--kiosk", "http://localhost:8000"], shell=True)
+    subprocess.Popen(["start", "chrome", "--kiosk", link], shell=True)
 
 elif operating_system == "darwin":
     print("Starting Mac Launcher")
+
+    ##  Start up app in "kiosk" mode
+    subprocess.Popen(["open", "-a", "Google Chrome", "--args", "--kiosk", link])
+
 elif operating_system == "linux":
     print("Starting Linux")
+
+    ##  Start up app in "kiosk" mode
+    subprocess.Popen(["chromium-browser", "--kiosk", link])
 else:
     print("Unsupported OS!")

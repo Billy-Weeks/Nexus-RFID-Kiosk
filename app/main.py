@@ -183,7 +183,7 @@ def scan(request: Request, scanned_id: str = Form(...)):
         return RedirectResponse(url="/dashboard", status_code=303)
 
     ##  Checking to make sure the scanned ID is in the database already
-    check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
+    check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()     
 
     if check.data:
         ##  Package data and update database: user_id
