@@ -1,5 +1,13 @@
+##  Imports
 import os ## For accessing environment variables/reading computer files
-from fastapi import FastAPI, Request, Form
+import csv ## Gives tools like csvDictReader
+import uuid ## Used to give batch tags to groups of data
+import secrets ## Used to create secret hash used in the app
+import signal ## Used to send signals (specifically "kill" signal)
+import io ## Wrapping file data to look like file from local machine
+import time ## Used to create delay for synchronization purposes
+
+from fastapi import FastAPI, Request, Form, BackgroundTasks, background ## FastAPI tools for creating app, handling requests, and form data
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
 from fastapi.staticfiles import StaticFiles ## For taking care of static files like CSS
 from fastapi.responses import RedirectResponse ## For redirecting users to different pages
@@ -7,11 +15,9 @@ from fastapi import File, UploadFile ## For handling CSV file uploads
 from starlette.middleware.sessions import SessionMiddleware ## Allows the app to uses "sessions" and remember information across different pages
 from supabase import create_client ## For connecting to Supabase
 from dotenv import load_dotenv ## For loading environment variables from .env file
-import io ## Wrapping file data to look like file from local machine
-import csv ## Gives tools like csvDictReader
-import uuid ## Used to give batch tags to groups of data
-import secrets ## Used to create secret hash used in the app
-import signal ## Used to send signals (specifically "kill" signal)
+
+
+
 
 ##  Temp setup password
 SETUP_PASS = "setup"
@@ -465,18 +471,34 @@ def lost_found_post(request: Request, scanned_id: str = Form(...)):
 
 
 @app.post("/shutdown_kiosk")
-def shutdown(request: Request, admin_pass: str = Form(...)):
+def shutdown(request: Request, background_tasks: BackgroundTasks, admin_pass: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if admin_pass == ADMIN_PASSWORD:
-        ##  Command to "kill" current chrome process
-        os.system("taskkill /IM chrome.exe /F")
 
-        current_pid = os.getpid()
+        ##  Clear session data (security measure)
+        request.session.clear()
 
-        os.kill(current_pid, signal.SIGTERM)
+        ##  Encapsulate shutdown mechanics in a background tasks
+        background_tasks.add_task(execute_shutdown)
+
         return {"status": "Terminal Closed"}
     else:
         return RedirectResponse(url="/sign_out?error=invalid", status_code=303)
+
+##  Function to execute shutdown mechanics
+def execute_shutdown():
+    ##  Delay so status is updated before shutdown occurs
+    time.sleep(1)
+
+    
+    ##  Command to "kill" current chrome process
+    os.system("taskkill /IM chrome.exe /F")
+
+    ##  Get current process id
+    current_pid = os.getpid()
+
+    ##  Send kill signal for backend to stop
+    os.kill(current_pid, signal.SIGTERM)
 
 
 @app.post("/setup")
@@ -488,7 +510,7 @@ def setup(request: Request, name: str = Form(...), url: str = Form(...), key: st
 
     ##  Create hash to be written as SESSION_SECRET_KEY
     session_secret = secrets.token_hex(32)
-
+    
     ##  Create .env file and write user chosen secret words
     with open(".env", "w") as file:
         file.write(f"""CLUB_NAME="{name}"
