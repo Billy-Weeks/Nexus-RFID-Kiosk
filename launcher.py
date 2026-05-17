@@ -8,8 +8,9 @@ from app.main import app ##  Imports the FastAPI app from main.py
 ##  Refactor to use operating system independent code to open browser in "kiosk" mode
 
 def start_browser():
-    time.sleep(2)
-    webbrowser.open("http://127.0.0.1:8000")
+    chrome = webbrowser.get(r"'C:\Program Files\Google\Chrome\Application\chrome.exe' --kiosk %s")
+    time.sleep(4)
+    chrome.open("http://127.0.0.1:8000")
 
 
 
