@@ -6,6 +6,7 @@ import secrets ## Used to create secret hash used in the app
 import signal ## Used to send signals (specifically "kill" signal)
 import io ## Wrapping file data to look like file from local machine
 import time ## Used to create delay for synchronization purposes
+import sys ## Used in logic to check if app is being ran as a bundled executable
 
 from fastapi import FastAPI, Request, Form, BackgroundTasks, background ## FastAPI tools for creating app, handling requests, and form data
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
@@ -16,7 +17,15 @@ from starlette.middleware.sessions import SessionMiddleware ## Allows the app to
 from supabase import create_client ## For connecting to Supabase
 from dotenv import load_dotenv ## For loading environment variables from .env file
 
+##  Logic to check if app is being ran from pyinstaller package versus through regular IDE/terminal
+if getattr(sys, 'frozen', False):
+    ##  When being ran as a bundled executable, the path to static and templates change
+    ##  This logic finds that base path and sets it so the app can then find the static and template files correctly
+    base_path = sys._MEIPASS
 
+else:
+    ##  When ran through terminal or IDE, the base path is where the project is located
+    base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 ##  Temp setup password
@@ -51,10 +60,10 @@ app = FastAPI()
 app.add_middleware(SessionMiddleware, secret_key=os.environ.get("SESSION_SECRET_KEY"))
 
 ##  Point Jinja to correct directory holding templates
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=os.path.join(base_path, "templates"))
 
 ##  Mount the static files directory to serve CSS and other static assets
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=os.path.join(base_path, "static")), name="static")
 
 ##  Global event variable to hold the current event name, which can be updated by the admin
 
