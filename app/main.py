@@ -510,6 +510,16 @@ def execute_shutdown():
     os.kill(current_pid, signal.SIGTERM)
 
 
+@app.get("/setup")
+def get_setup(request: Request):
+    ##  Security check to prevent malicious users from accessing setup page
+    if not request.session.get("is_setup"):
+        return RedirectResponse(url="/admin", status_code=303)
+    return templates.TemplateResponse(request=request,
+                                      name="setup.html",
+                                      context={})
+
+
 @app.post("/setup")
 def setup(request: Request, name: str = Form(...), url: str = Form(...), key: str = Form(...),
           admin: str = Form(...), escape: str = Form(...)):
