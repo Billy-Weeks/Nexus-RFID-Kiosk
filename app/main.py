@@ -553,7 +553,7 @@ SESSION_SECRET_KEY="{session_secret}"
     request.session.clear()
 
     background_tasks.add_task(phoenix)
-    return RedirectResponse(url="/admin", status_code=303)
+    return RedirectResponse(url="/initialization", status_code=303)
 
 def phoenix():
     ##  Function to restart the app after setup so that new .env variables can be used without user having to manually restart
@@ -572,3 +572,10 @@ def sign_out(request: Request):
     return templates.TemplateResponse(request=request,
                                       name="sign_out.html",
                                       context={"message": err_msg})
+
+@app.get("/initialization")
+def initialization(request: Request):
+    ##  Page to show while app is restarting after setup
+    return templates.TemplateResponse(request=request,
+                                      name="initialization.html",
+                                      context={})
