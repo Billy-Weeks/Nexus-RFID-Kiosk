@@ -521,7 +521,7 @@ def get_setup(request: Request):
 
 
 @app.post("/setup")
-def setup(request: Request, name: str = Form(...), url: str = Form(...), key: str = Form(...),
+def setup(request: Request, background_tasks: BackgroundTasks, name: str = Form(...), url: str = Form(...), key: str = Form(...),
           admin: str = Form(...), escape: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_setup"):
@@ -551,7 +551,16 @@ SESSION_SECRET_KEY="{session_secret}"
 
     ##  Clear .session variables (security check)
     request.session.clear()
+
+    background_tasks.add_task(phoenix)
     return RedirectResponse(url="/admin", status_code=303)
+
+def phoenix():
+    ##  Function to restart the app after setup so that new .env variables can be used without user having to manually restart
+    
+    time.sleep(1) ##  Delay to ensure response is sent before restart occurs
+
+    os.execv(sys.executable, [sys.executable] + sys.argv) ##  Restart the app using the same command that was used to start it originally
 
 @app.get("/sign_out")
 def sign_out(request: Request):
