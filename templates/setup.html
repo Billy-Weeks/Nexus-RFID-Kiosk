@@ -13,20 +13,30 @@
     <div class="app-container {% if status == 'error' %}error{% endif %}">
         <form action="/setup" method="post">
             
-            <label for="club-name">Club Name</label>
-            <input type="text" id="club-name" name="name" required autofocus autocomplete="off" placeholder="ColorStack" />
+            <div class="field-style">
+                <label for="club-name">Club Name</label>
+                <input type="text" id="club-name" name="name" required autofocus autocomplete="off" placeholder="ColorStack" />
+            </div>
 
-            <label for="url">Enter Supabase Url</label>
-            <input type="password" id="url" name="url" required autocomplete="off" />
+            <div class="field-style">
+                <label for="url">Enter Supabase Url</label>
+                <input type="password" id="url" name="url" required autocomplete="off" />
+            </div>
 
-            <label for="key">Enter Supabase API key</label>
-            <input type="password" id="key" name="key" required autocomplete="off" />
+            <div class="field-style">
+                <label for="key">Enter Supabase API key</label>
+                <input type="password" id="key" name="key" required autocomplete="off" />
+            </div>
 
-            <label for="admin-pass">Choose an Admin Password</label>
-            <input type="password" id="admin-pass" name="admin" required autocomplete="off" />
+            <div class="field-style">
+                <label for="admin-pass">Choose an Admin Password</label>
+                <input type="password" id="admin-pass" name="admin" required autocomplete="off" />
+            </div>
 
-            <label for="escape-pass">Enter an Escape Password. (Must begin with a number)</label>
-            <input type="password" id="escape-pass" name="escape" required autocomplete="off" />
+            <div class="field-style">
+                <label for="escape-pass">Enter an Escape Password. (Must begin with a number)</label>
+                <input type="password" id="escape-pass" name="escape" required autocomplete="off" />
+            </div>
             
             <button type="submit">Complete Setup</button>
         </form>
