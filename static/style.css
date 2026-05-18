@@ -66,13 +66,13 @@ body {
 .splash-screen {
     font-size: 5rem;
 	position:absolute;
-    animation: pulse-glow 6s ease-in-out;
+    animation: pulse-glow 4s ease-in-out;
     animation-fill-mode: forwards;
 }
 
 .goodbye-screen {
 	animation: fade-in 3s ease-in-out;
-	animation-delay: 6s;
+	animation-delay: 4s;
 	animation-fill-mode: forwards;
 	font-size: 5rem;
 	position: absolute;
