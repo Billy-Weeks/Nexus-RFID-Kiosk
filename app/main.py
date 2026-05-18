@@ -578,4 +578,4 @@ def initialization(request: Request):
     ##  Page to show while app is restarting after setup
     return templates.TemplateResponse(request=request,
                                       name="initialization.html",
-                                      context={})
+                                      context={"message": "Saving Credentials...."})
