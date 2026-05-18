@@ -14,10 +14,18 @@
 <body>
 
     <div class="landing-splash">
-  
-        <h1 class="cinematic-title">{% if club != none %}{{ club }} Access Terminal {% else %} Welcome to the Access Terminal {% endif %}</h1>
+
+        {% if club != none %}
+        <h1 class="cinematic-title">{{ club }} Access Terminal</h1>
 
         <a href="/admin" class="dash-btn cinematic-btn">System Login</a>
+
+        {% else %} 
+        <h1 class="cinematic-title">Welcome to the Access Terminal</h1> 
+
+        <a href="/admin" class="dash-btn cinematic-btn">New User Access</a>
+
+        {% endif %}
 
     </div>
    

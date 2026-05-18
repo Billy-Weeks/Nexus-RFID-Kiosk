@@ -97,7 +97,7 @@ def admin_logIn(request: Request):
         current_status = "default"
     return templates.TemplateResponse(request=request,
                                       name="admin.html",
-                                      context={"status": current_status, "message": err_msg})
+                                      context={"status": current_status, "message": err_msg, "club": CLUB_NAME})
 
 @app.post("/admin-setup")
 def admin_setup(request: Request, a_pass: str = Form(...)):

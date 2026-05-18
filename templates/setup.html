@@ -11,6 +11,10 @@
 
 <body>
     <div class="app-container {% if status == 'error' %}error{% endif %}">
+
+        <h1>Initialization Portal //</h1>
+        <h2>Secure environment setup required</h2>
+
         <form action="/setup" method="post">
             
             <div class="field-style">
@@ -34,7 +38,7 @@
             </div>
 
             <div class="field-style">
-                <label for="escape-pass">Enter an Escape Password. (Must begin with a number)</label>
+                <label for="escape-pass">Enter an Escape Password. (Must begin with a letter)</label>
                 <input type="password" id="escape-pass" name="escape" required autocomplete="off" />
             </div>
             

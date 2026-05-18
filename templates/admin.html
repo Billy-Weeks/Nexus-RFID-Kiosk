@@ -17,14 +17,25 @@
             {% if status == 'error' %}
 
             <p class="error">{{ message }}</p>
-            
+
             {% endif %}
             <br />
+
+            {% if club != none %}
             <label for="admin-pass">Enter Password To Sign In</label>
             <br /><br />
             <input type="password" id="admin-pass" name="a_pass" required autofocus placeholder="Enter Password" />
             <br /><br />
             <button type="submit">Login</button>
+
+            {% else %}
+            <label for="admin-pass">Enter First Time User Password</label>
+            <br /><br />
+            <input type="password" id="admin-pass" name="a_pass" required autofocus placeholder="Enter Password" />
+            <br /><br />
+            <button type="submit">Enter Initialization Portal</button>
+
+            {% endif %}
         </form>
     </div>
 </body>
