@@ -1,2 +1,5 @@
-# RFID-checkin-v2_Web
-A secure check-in system utilizing a FastAPI Web App, RFID hardware and Supabase database administration
+# Nexus RFID Kiosk // Access Terminal
+
+A hardware-integrated Python kiosk application designed for secure RFID/NFC event scanning. Features an automated initialization lifecycle, localized state management, and real-time cloud synchronization via Supabase.
+
+![Nexus Kiosk Initialization Demonstration](images/intro.mov
