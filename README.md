@@ -4,8 +4,20 @@ A hardware-integrated Python kiosk application designed for secure RFID/NFC even
 
 https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 
+## Features
 
-## System Features
+### Admin & User Features
+* **Batch User Additions:** Reads from a .csv file (such as from a Google Doc or Excel spreadsheet), adds and assigns RFID cards to a large batch of users at once. Useful for beginning of year/semester events.
+* **Add Onsite:** Gives clubs/event coordinators the ability to add members during the event. Updates database in realtime.
+* **Dynamic Event Naming:** Each event can have different names (i.e. Workshop #2, Mock Technical Interview Event, etc.). Allows for separating attendance by event.
+* **Start & Stop Event:** Once an event begins, each member scanned in is attached to that event. At the end of the event, the admin or coordinator can stop the event, setting up for future events.
+* **Lost & Found:** Function allows for club officers to scan a lost card and retrieve the name of the owner by visual feedback on the screen.
+* **Member Confirmation:** When member scans/taps into event, their name splashes on the screen giving visual confirmation of correct member. 
+* **Logout:** Admin has the ability to logout of the system, giving the ability to lock terminal for security reasons. 
+* **System Shutdown:** Performs a complete shutdown of the program, ensuring data has been saved to the database, and admin has been signed out complely. 
+
+
+### System Architecture
 
 
 * **Standalone Deployment:** Fully compiled executable requiring no local Python environment or dependency management for the end-user.
@@ -37,15 +49,6 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
    * On first boot, the system will detect a missing `.env` file and seamlessly route you to the setup portal.
    * Enter your Club Name, Supabase credentials, and Admin keys.
    * The application will automatically save your secrets and reboot itself into the active kiosk state.
-
----
-
-## Technical Deep Dive: Process Replacement
-
-One of the core challenges of building a continuous-run kiosk compiled as a standalone executable is handling environment variable injection dynamically. 
-
-This system solves stale memory states using a "Phoenix Protocol" approach. When the Initialization Portal completes its write operations to the `.env` file, the application clears all active web sessions, halts background threads, and executes an `os.execv` command. This completely replaces the currently running executable process with a brand-new instance of itself, forcing the system to read the freshly injected API keys from the disk while providing a seamless, cinematic loading screen to the user.
-
 
 ---
 
@@ -107,8 +110,7 @@ Records timestamped check-in events.
 
 Execute the following snippet in your Supabase SQL Editor to instantly generate the required schema:
 
-```
-sql
+```sql
 create table public.users (
   user_id uuid not null default gen_random_uuid (),
   cin text not null,
@@ -132,13 +134,26 @@ create table public.attendance_log (
   constraint attendance_log_pkey primary key (log_id)
 );
 ```
+
 </details>
 
 ---
 
-## Future Features
 
-* Cross-Platform Compilation: Future releases will also have executables available for download for macOS and Linux operating systems.
-* Expanded NFC Hardware Support: Implement and test robust functionality specifically for NFC tags and stickers.
-* Admin Hardware Override: Assign a dedicated "Admin" NFC tag/sticker to act as a physical hardware escape sequence for the kiosk.
-* Dynamic Schema Generation: Implement dynamic table creation within the Python architecture to automatically generate required database tables on initial setup.
+## Technical Deep Dive: Process Replacement
+
+One of the core challenges of building a continuous-run kiosk compiled as a standalone executable is handling environment variable injection dynamically. 
+
+This system solves stale memory states using a "Phoenix Protocol" approach. When the Initialization Portal completes its write operations to the `.env` file, the application clears all active web sessions, halts background threads, and executes an `os.execv` command. This completely replaces the currently running executable process with a brand-new instance of itself, forcing the system to read the freshly injected API keys from the disk while providing a seamless, cinematic loading screen to the user.
+
+
+---
+
+
+## Future Improvements
+
+* **Cross-Platform Compilation:** Future releases will also have executables available for download for macOS and Linux operating systems.
+* **Expanded NFC Hardware Support:** Implement and test robust functionality specifically for NFC tags and stickers.
+* **Admin Hardware Override:** Assign a dedicated "Admin" NFC tag/sticker to act as a physical hardware escape sequence for the kiosk.
+* **Dynamic Schema Generation:** Implement dynamic table creation within the Python architecture to automatically generate required database tables on initial setup.
+* **In-App Analytics & Reporting:** Generate end-of-even attendance summaries and historical engagment reports directly within the kiosk interface, eliminating the need for database-level adminitistrative access.
