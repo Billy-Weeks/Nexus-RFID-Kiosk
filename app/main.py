@@ -28,8 +28,8 @@ else:
     base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-##  Temp setup password
-SETUP_PASS = "setup"
+'''##  Temp setup password
+SETUP_PASS = "setup"'''
 
 ## Connecting to Supabase
 load_dotenv() ## Load environment variables from .env file
@@ -74,6 +74,10 @@ app.mount("/static", StaticFiles(directory=os.path.join(base_path, "static")), n
 def read_root(request: Request):
     ##  Root endpoint... works as "landing page" for program start-up
 
+    if not os.path.exists(".env"):
+        ##  Create security flag so malicious users don't gain unwarranted access
+        request.session["is_setup"] = True
+
     return templates.TemplateResponse(request=request,
                                       name="landing.html",
                                       context={"club": CLUB_NAME})
@@ -101,12 +105,6 @@ def admin_logIn(request: Request):
 
 @app.post("/admin-setup")
 def admin_setup(request: Request, a_pass: str = Form(...)):
-
-    if not os.path.exists(".env") and a_pass == SETUP_PASS:
-        ##  Create security flag so malicious users don't gain unwarranted access
-        request.session["is_setup"] = True
-        return RedirectResponse(url="/setup", status_code=303)
-
     ##  Check if the password entered matches the admin password
     if a_pass == ADMIN_PASSWORD:
         ## creates a session key "is_admin" and sets it to True, which can be used to check if the user is an admin on other pages
