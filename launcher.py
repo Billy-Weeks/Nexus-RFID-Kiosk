@@ -19,4 +19,4 @@ if __name__ == "__main__":
     threading.Thread(target=start_browser, daemon=True).start()
 
     ##  Start the server (Inside Python, no command prompt)
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", log_config=None, port=8000)
