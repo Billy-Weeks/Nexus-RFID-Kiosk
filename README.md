@@ -108,7 +108,8 @@ Records timestamped check-in events.
 
 Execute the following snippet in your Supabase SQL Editor to instantly generate the required schema:
 
-```sql
+```
+sql
 create table public.users (
   user_id uuid not null default gen_random_uuid (),
   cin text not null,
@@ -132,4 +133,3 @@ create table public.attendance_log (
   constraint attendance_log_pkey primary key (log_id)
 );
 ```
-=======
