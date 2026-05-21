@@ -32,7 +32,7 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 ## Quick Start & Setup
 
 ### Prerequisites
-* A Supabase project with your generated API URL and Anon Key._(Important: You must configure your database tables **BEFORE** launching the application. See the **Database Schema** section below for the required SQL script)._ 
+* A Supabase project with your generated API URL and Anon Key. _(Important: You must configure your database tables BEFORE launching the application. See the **Database Schema** section below for the required SQL script)._ 
 * An active RFID/NFC hardware scanner connected via USB.
 
 
