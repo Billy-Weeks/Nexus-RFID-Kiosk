@@ -133,3 +133,12 @@ create table public.attendance_log (
 );
 ```
 </details>
+
+---
+
+## Future Features
+
+* Cross-Platform Compilation: Future releases will also have executables available for download for macOS and Linux operating systems.
+* Expanded NFC Hardware Support: Implement and test robust functionality specifically for NFC tags and stickers.
+* Admin Hardware Override: Assign a dedicated "Admin" NFC tag/sticker to act as a physical hardware escape sequence for the kiosk.
+* Dynamic Schema Generation: Implement dynamic table creation within the Python architecture to automatically generate required database tables on initial setup.
