@@ -32,7 +32,7 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 ## Quick Start & Setup
 
 ### Prerequisites
-* A Supabase project with your generated API URL and Anon Key.
+* A Supabase project with your generated API URL and Anon Key._(Important: You must configure your database tables **BEFORE** launching the application. See the **Database Schema** section below for the required SQL script)._ 
 * An active RFID/NFC hardware scanner connected via USB.
 
 
@@ -64,7 +64,7 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 ## Environment Variables & Local State
 
 
-While the application utilizes Supabase for cloud synchronization, it relies on a local `.env` file for state management and API access. These keys are automatically generated and secured by the Initialization Portal on first boot:
+While the application utilizes Supabase for cloud synchronization, it relies on a local `.env` file for state management and API access. These keys are securely written to the local disk via the _Initialization Portal_ on first boot, with the exception of the session key which is auto-generated:
 
 * `CLUB_NAME`: The designated display name of the active organization.
 * `SUPABASE_URL`: The API routing URL for the Supabase project.
