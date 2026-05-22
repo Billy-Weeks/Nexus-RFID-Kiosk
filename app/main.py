@@ -600,14 +600,14 @@ def post_tools(request: Request, first: str = Form(...), last: str = Form(...), 
     if not first or not last or not role or not scanned_id:
         request.session["flash_msg"] = "Please fill out all fields."
         request.session["status"] = "error"
-        return RedirectResponse(url="/tools", status_code=303)
+        return RedirectResponse(url="/admin_tools", status_code=303)
 
     check = supabase.table('admin').select('*').eq('nfc_id', scanned_id).execute()
 
     if check.data:
         request.session["flash_msg"] = "NFC already assigned to another admin."
         request.session["status"] = "error"
-        return RedirectResponse(url="/tools", status_code=303)
+        return RedirectResponse(url="/admin_tools", status_code=303)
 
     ##  Add new admin to database (after passing error checks)
     ##  First create a dictionary to hold new admin information, then insert into database
