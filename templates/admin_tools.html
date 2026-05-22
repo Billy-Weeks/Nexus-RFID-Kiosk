@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Add Admin</title>
+</head>
+
+<body>
+    <div id="main-container" class="app-container {{ status }}">
+        <h1 id="status-message"> {{ message }}</h1>
+
+        <div id="input-area" style="display: {% if status == 'default' %}block{% else %}none{% endif %};">
+
+            
+            <form action="/tools" method="post">
+
+                <div class="field-style">
+                    <label for="first_name_input">First Name:</label>
+                    <input type="text" id="first_name_input" name="first" required autofocus autocomplete="off" placeholder="Eddie" />
+                </div>
+
+                <div class="field-style">
+                    <label for="last_name_input">Last Name:</label>
+                    <input type="text" id="last_name_input" name="last" required autocomplete="off" placeholder="the Golden Eagle" />
+                </div>
+
+                <div class="field-style">
+                    <label for="role_input">Club Role</label>
+                    <input type="text" id="role_input" name="role" required autocomplete="off" placeholder="President" />
+                </div>
+
+                <div class="field-style">
+                    <label for="rfid-input">Tap NFC Tag</label>
+                    <input type="password" id="rfid-input" name="scanned_id" required autocomplete="off" />
+                </div>
+            </form>
+
+        </div>
+
+
+    </div>
+
+    <script>
+
+        let typingTimer;
+        const doneTypingInterval = 100;
+        const scanBox = document.getElementById('rfid-input');
+
+        if (scanBox) {
+            scanBox.addEventListener('input', function () {
+                clearTimeout(typingTimer);
+
+                typingTimer = setTimeout(() => {
+                    if (this.value.length > 0 && /^\d+$/.test(this.value)) {
+                        console.log("Scanner Finished. Submitting ID: ", this.value);
+                        this.form.submit();
+
+                    }
+                }, doneTypingInterval);
+            });
+        }
+    </script>
+
+</body>
+
+</html>
