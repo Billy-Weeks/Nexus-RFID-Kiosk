@@ -577,3 +577,46 @@ def initialization(request: Request):
     return templates.TemplateResponse(request=request,
                                       name="initialization.html",
                                       context={"message": "Saving Credentials...."})
+
+@app.get("/admin_tools")
+def get_tools(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicisous users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    message = request.session.pop("flash_msg", "")
+    status = request.session.pop("status", "")
+    return templates.TemplateResponse(request=request,
+                                      name="admin_tools.html",
+                                      context={"message": message, "status": status})
+
+@app.post("/admin_tools")
+def post_tools(request: Request, first: str = Form(...), last: str = Form(...), role: str = Form(...), scanned_id: str = Form()):
+    ##  Check to see if user is admin (security measure to prevent malicisous users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+    
+    ##  Error checks
+    if not first or not last or not role or not scanned_id:
+        request.session["flash_msg"] = "Please fill out all fields."
+        request.session["status"] = "error"
+        return RedirectResponse(url="/tools", status_code=303)
+
+    check = supabase.table('admin').select('*').eq('nfc_id', scanned_id).execute()
+
+    if check.data:
+        request.session["flash_msg"] = "NFC already assigned to another admin."
+        request.session["status"] = "error"
+        return RedirectResponse(url="/tools", status_code=303)
+
+    ##  Add new admin to database (after passing error checks)
+    ##  First create a dictionary to hold new admin information, then insert into database
+    ##  ****Insert can only take 1 parameter, thus we have to create a dictionary
+    new_admin = {'first': first, 'last': last, 'role': role, 'nfc_id': scanned_id}
+
+    supabase.table('admin').insert(new_admin).execute()
+    
+    request.session["flash_msg"] = f"{first} {last} has been successfully added as an admin."
+    request.session["status"] = "success"
+    
+    return RedirectResponse(url="/admin_tools", status_code=303)
