@@ -28,9 +28,6 @@ else:
     base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-'''##  Temp setup password
-SETUP_PASS = "setup"'''
-
 ## Connecting to Supabase
 load_dotenv() ## Load environment variables from .env file
 
@@ -183,9 +180,10 @@ def scan(request: Request, scanned_id: str = Form(...)):
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303) ##   Redirects back to login page if user is not admin
 
+    admin = supabase.table('admin').select('*').eq('nfc_id', scanned_id).execute()
 
     ##  Check to make sure escape password wasn't inputted
-    if scanned_id == ESCAPE_PASSWORD:
+    if scanned_id == ESCAPE_PASSWORD or admin.data:
         ##  Redirect to dashboard to use other admin functions
         return RedirectResponse(url="/dashboard", status_code=303)
 
@@ -266,8 +264,10 @@ def onsite_post(request: Request, scanned_id: str = Form(...)):
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code = 303)
 
+    admin = supabase.table('admin').select('*').eq('nfc_id', scanned_id).execute()
+
     ##  Check to make sure escape password wasn't inputted
-    if scanned_id == ESCAPE_PASSWORD:
+    if scanned_id == ESCAPE_PASSWORD or admin.data:
         return RedirectResponse(url="/add_users", status_code = 303)
 
     ##  Check to see if card id is already in the database
@@ -419,7 +419,9 @@ def batch_scan_post(request: Request, cin: str = Form(...), scanned_id: str = Fo
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303)
 
-    if scanned_id == ESCAPE_PASSWORD:
+    admin = supabase.table('admin').select('*').eq('nfc_id', scanned_id).execute()
+
+    if scanned_id == ESCAPE_PASSWORD or admin.data:
         return RedirectResponse(url="/add_users", status_code=303)
 
     ##  Check to see if card has already been assigned
@@ -457,8 +459,10 @@ def lost_found_post(request: Request, scanned_id: str = Form(...)):
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303)
 
+    admin = supabase.table('admin').select('*').eq('nfc_id', scanned_id).execute()
+
     ##  Escape check
-    if scanned_id == ESCAPE_PASSWORD:
+    if scanned_id == ESCAPE_PASSWORD or admin.data:
         return RedirectResponse(url="/add_users", status_code=303)
 
     card = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
