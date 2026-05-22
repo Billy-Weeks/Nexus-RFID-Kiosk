@@ -8,7 +8,7 @@ import io ## Wrapping file data to look like file from local machine
 import time ## Used to create delay for synchronization purposes
 import sys ## Used in logic to check if app is being ran as a bundled executable
 
-from fastapi import FastAPI, Request, Form, BackgroundTasks, background ## FastAPI tools for creating app, handling requests, and form data
+from fastapi import FastAPI, Request, Form, BackgroundTasks ## FastAPI tools for creating app, handling requests, and form data
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
 from fastapi.staticfiles import StaticFiles ## For taking care of static files like CSS
 from fastapi.responses import RedirectResponse ## For redirecting users to different pages
@@ -586,9 +586,17 @@ def get_tools(request: Request):
 
     message = request.session.pop("flash_msg", "")
     status = request.session.pop("status", "")
+    first = request.session.pop("first", "")
+    last = request.session.pop("last", "")
+    role = request.session.pop("role", "")
+    
     return templates.TemplateResponse(request=request,
                                       name="admin_tools.html",
-                                      context={"message": message, "status": status})
+                                      context={"message": message,
+                                               "status": status,
+                                               "first": first,
+                                               "last": last,
+                                               "role": role})
 
 @app.post("/admin_tools")
 def post_tools(request: Request, first: str = Form(...), last: str = Form(...), role: str = Form(...), scanned_id: str = Form()):
@@ -600,6 +608,13 @@ def post_tools(request: Request, first: str = Form(...), last: str = Form(...), 
     if not first or not last or not role or not scanned_id:
         request.session["flash_msg"] = "Please fill out all fields."
         request.session["status"] = "error"
+
+        ##  Store form data so user doesn't have to retype everything after error
+        request.session["first"] = first
+        request.session['last'] = last
+        request.session['role'] = role
+        request.session['scanned_id'] = scanned_id
+
         return RedirectResponse(url="/admin_tools", status_code=303)
 
     check = supabase.table('admin').select('*').eq('nfc_id', scanned_id).execute()
@@ -607,6 +622,12 @@ def post_tools(request: Request, first: str = Form(...), last: str = Form(...), 
     if check.data:
         request.session["flash_msg"] = "NFC already assigned to another admin."
         request.session["status"] = "error"
+
+        ##  Store form data so user doesn't have to retype everything after error (except the scanned id which is the issue)
+        request.session["first"] = first
+        request.session['last'] = last
+        request.session['role'] = role
+
         return RedirectResponse(url="/admin_tools", status_code=303)
 
     ##  Add new admin to database (after passing error checks)

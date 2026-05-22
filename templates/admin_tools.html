@@ -11,24 +11,24 @@
     <div id="main-container" class="app-container {{ status }}">
         <h1 id="status-message"> {{ message }}</h1>
 
-        <div id="input-area" style="display: {% if status == 'default' %}block{% else %}none{% endif %};">
+        <div id="input-area" style="display: {% if status == 'success' %}none{% else %}block{% endif %};">
 
             
             <form action="/admin_tools" method="post">
 
                 <div class="field-style">
                     <label for="first_name_input">First Name:</label>
-                    <input type="text" id="first_name_input" name="first" required autofocus autocomplete="off" placeholder="Eddie" />
+                    <input type="text" id="first_name_input" name="first" value="{{ first }}" required autofocus autocomplete="off" placeholder="Eddie" />
                 </div>
 
                 <div class="field-style">
                     <label for="last_name_input">Last Name:</label>
-                    <input type="text" id="last_name_input" name="last" required autocomplete="off" placeholder="the Golden Eagle" />
+                    <input type="text" id="last_name_input" name="last" value="{{ last }}" required autocomplete="off" placeholder="the Golden Eagle" />
                 </div>
 
                 <div class="field-style">
                     <label for="role_input">Club Role</label>
-                    <input type="text" id="role_input" name="role" required autocomplete="off" placeholder="President" />
+                    <input type="text" id="role_input" name="role" value="{{ role }}" required autocomplete="off" placeholder="President" />
                 </div>
 
                 <div class="field-style">
