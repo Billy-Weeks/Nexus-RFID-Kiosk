@@ -15,6 +15,7 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 * **Member Confirmation:** When member scans/taps into event, their name splashes on the screen giving visual confirmation of correct member. 
 * **Logout:** Admin has the ability to logout of the system, giving the ability to lock terminal for security reasons. 
 * **System Shutdown:** Performs a complete shutdown of the program, ensuring data has been saved to the database, and admin has been signed out complely. 
+* **Admin NFC Escape Sequence:** Allows administrators to use a designated NFC tag to exit scan loops, replacing the need for manual keyboard escape sequences
 
 
 ### System Architecture
@@ -133,6 +134,16 @@ create table public.attendance_log (
   event_name text null,
   constraint attendance_log_pkey primary key (log_id)
 );
+
+create table public.admin (
+  nat_id uuid not null default gen_random_uuid (),
+  nfc_id text not null,
+  first text not null default ''::text,
+  last text not null default ''::text,
+  role text not null default ''::text,
+  constraint admin_pkey primary key (nat_id),
+  constraint admin_nfc_id_key unique (nfc_id)
+);
 ```
 
 </details>
@@ -153,7 +164,6 @@ This system solves stale memory states using a "Phoenix Protocol" approach. When
 ## Future Improvements
 
 * **Cross-Platform Compilation:** Future releases will also have executables available for download for macOS and Linux operating systems.
-* **Expanded NFC Hardware Support:** Implement and test robust functionality specifically for NFC tags and stickers.
 * **Admin Hardware Override:** Assign a dedicated "Admin" NFC tag/sticker to act as a physical hardware escape sequence for the kiosk.
 * **Dynamic Schema Generation:** Implement dynamic table creation within the Python architecture to automatically generate required database tables on initial setup.
 * **In-App Analytics & Reporting:** Generate end-of-even attendance summaries and historical engagment reports directly within the kiosk interface, eliminating the need for database-level adminitistrative access.
