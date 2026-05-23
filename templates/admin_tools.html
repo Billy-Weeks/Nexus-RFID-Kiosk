@@ -14,7 +14,7 @@
         <div id="input-area" style="display: {% if status == 'success' %}none{% else %}block{% endif %};">
 
             
-            <form action="/admin_tools" method="post">
+            <form action="/admin_tools" method="post" novalidate> <!--novalidate overrides default HTML5 validation allow for customized alerts-->
 
                 <div class="field-style">
                     <label for="first_name_input">First Name:</label>
@@ -55,7 +55,8 @@
                 typingTimer = setTimeout(() => {
                     if (this.value.length > 0 && /^\d+$/.test(this.value)) {
                         console.log("Scanner Finished. Submitting ID: ", this.value);
-                        this.form.submit();
+                        this.form.requestSubmit();
+                        this.value = ''; // Clear the input after submission
 
                     }
                 }, doneTypingInterval);
