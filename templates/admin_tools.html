@@ -61,6 +61,12 @@
                 }, doneTypingInterval);
             });
         }
+
+        {% if status == 'success' %}
+        setTimeout(() => {
+            window.location.href = "/admin_tools";
+        }, 3000);
+        {% endif %}
     </script>
 
 </body>
