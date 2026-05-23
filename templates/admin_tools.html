@@ -55,6 +55,15 @@
                 typingTimer = setTimeout(() => {
                     if (this.value.length > 0 && /^\d+$/.test(this.value)) {
                         console.log("Scanner Finished. Submitting ID: ", this.value);
+
+                        // Check to see if the entire form has been filled out correctly
+                        if (!this.form.checkValidity()) {
+                            document.getElementById('status-message').innerText = "Please fill out all fields before scanning";
+
+                            document.getElementsById('main-container').className = "app-container error";
+
+                            this.value = '';
+                        }
                         this.form.requestSubmit();
                         this.value = ''; // Clear the input after submission
 
