@@ -16,6 +16,8 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 * **Logout:** Admin has the ability to logout of the system, giving the ability to lock terminal for security reasons. 
 * **System Shutdown:** Performs a complete shutdown of the program, ensuring data has been saved to the database, and admin has been signed out complely. 
 * **Admin NFC Escape Sequence:** Allows administrators to use a designated NFC tag to exit scan loops, replacing the need for manual keyboard escape sequences
+* **Secure Admin Provisioning** Dedicated `/admin_tools` workflow for registering new system administrators with First Name, Last Name, Club Role, and a uniquely assigned NFC credential.
+
 
 
 ### System Architecture
@@ -27,6 +29,9 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 * **Process Replacement Architecture:** Utilizes low-level system commands to gracefully kill and resurrect the compiled kiosk environment after initialization, without requiring manual operating system reboots.
 * **Hardware Integration:** Dedicated listening architecture optimized for continuous RFID/NFC payload scanning.
 * **Real-Time Cloud Sync:** Instantaneous attendance and credential verification via Supabase integration.
+* **Customer Hardware-Level Form Validation** Bypasses standard, immersion-breaking browser alerts (via HTML5 `novalidate`) in favor of a customer JavaScript validation loop. Unfilled inputs are dynamically caught using `.checkValidity()` and `.requestSubmit()`, instantly triggering localized, red glowing CSS error stateson specific missing fields without reloading the page or losing terminal state.
+* **Deadlock Prevention** Physical scanner inputs are automatically wiped via JavaScripty upon both successful and failed form submission, preventing the scanner hardware from "locking up" if an admin forgets a required field.
+
 
 ---
 
@@ -106,6 +111,18 @@ Records timestamped check-in events.
 | `scan_time` | `timestamptz` | Not Null | Auto-generated timestamp of the scan (defaults to `now()`). |
 | `event_name` | `text` | Nullable | The active event occurring during the scan. |
 
+### Table: `admin`
+Stores system administrators and their privileged physical credentials
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `nat_id` | `uuid` | Primary Key | Auto-generated unique identifier for the administrator. |
+| `nfc_id` | `text` | Unique, Not Null | The unique physical hardware identifier of the assigned NFC tag. |
+| `first` | `text` | Not Null | Adminstrator's first name. |
+| `last` | `text` | Not Null | Adminstrator's last name. |
+| `role` | `text` | Not Null | The official title or position held within the club. |
+
+
 <details>
 <summary><b>Click here for Quick-Setup SQL</b></summary>
 
@@ -164,6 +181,5 @@ This system solves stale memory states using a "Phoenix Protocol" approach. When
 ## Future Improvements
 
 * **Cross-Platform Compilation:** Future releases will also have executables available for download for macOS and Linux operating systems.
-* **Admin Hardware Override:** Assign a dedicated "Admin" NFC tag/sticker to act as a physical hardware escape sequence for the kiosk.
 * **Dynamic Schema Generation:** Implement dynamic table creation within the Python architecture to automatically generate required database tables on initial setup.
-* **In-App Analytics & Reporting:** Generate end-of-even attendance summaries and historical engagment reports directly within the kiosk interface, eliminating the need for database-level adminitistrative access.
+* **In-App Analytics & Reporting:** Generate end-of-event attendance summaries and historical engagement reports directly within the kiosk interface, eliminating the need for database-level administrative access.
