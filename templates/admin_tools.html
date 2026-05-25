@@ -8,8 +8,12 @@
 </head>
 
 <body>
-    <div id="main-container" class="app-container {{ status }}">
-        <h1 id="status-message"> {{ message }}</h1>
+    <div id="main-container" class="app-container {{ status }}" style="max-width: 300px;">
+        
+        <h1 style="margin-top: 0; margin-bottom: 5px;">Nexus Admin Setup</h1>
+
+        
+        <h2 id="status-message" style="margin-bottom: 20px; color: #ff0000"> {{ message }}</h2>
 
         <div id="input-area" style="display: {% if status == 'success' %}none{% else %}block{% endif %};">
 
@@ -37,6 +41,9 @@
                 </div>
             </form>
 
+            <div class="button-stack" style="justify-content: center">
+                <a href="/dashboard" class="dash-btn">Back to Dashboard</a>
+            </div>
         </div>
 
 
@@ -60,12 +67,27 @@
                         if (!this.form.checkValidity()) {
                             document.getElementById('status-message').innerText = "Please fill out all fields before scanning";
 
-                            document.getElementsById('main-container').className = "app-container error";
+                            //document.getElementById('main-container').className = "app-container error"; 
+
+                            const allInputs = this.form.querySelectorAll('input');
+
+                            for (let currentInput of allInputs) {
+
+                                if (!currentInput.checkValidity()) {
+
+                                    currentInput.classList.add('error');
+                                }
+                                else {
+                                    currentInput.classList.remove('error');
+                                }
+                            }
 
                             this.value = '';
                         }
-                        this.form.requestSubmit();
-                        this.value = ''; // Clear the input after submission
+                        else {
+                            this.form.requestSubmit();
+                            this.value = ''; // Clear the input after submission
+                        }
 
                     }
                 }, doneTypingInterval);

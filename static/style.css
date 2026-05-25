@@ -103,6 +103,11 @@ body {
 	color: white;
 }
 
+.field-style input.error {
+	border-color: #ff0000;
+	box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
+}
+
 .landing-splash {
 	text-align: center;
 }
@@ -123,7 +128,7 @@ body {
 	display: none;
 	position: fixed;
 	top: 50%;
-	left: 50;
+	left: 50%;
 	transform: translate(-50%, -50%);
 	background-color: #222222;
 	color: white;
