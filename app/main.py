@@ -482,25 +482,20 @@ def lost_found_post(request: Request, scanned_id: str = Form(...)):
 
 
 @app.post("/shutdown_kiosk")
-def shutdown(request: Request, background_tasks: BackgroundTasks, admin_pass: str = Form(...)):
+def shutdown(request: Request, admin_pass: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if admin_pass == ADMIN_PASSWORD:
 
         ##  Clear session data (security measure)
         request.session.clear()
 
-        ##  Encapsulate shutdown mechanics in a background tasks
-        background_tasks.add_task(execute_shutdown)
-
         return {"status": "Terminal Closed"}
     else:
         return RedirectResponse(url="/sign_out?error=invalid", status_code=303)
 
 ##  Function to execute shutdown mechanics
+@app.post("/execute_shutdown")
 def execute_shutdown():
-    ##  Delay so status is updated before shutdown occurs
-    time.sleep(1)
-
     
     ##  Command to "kill" current chrome process
     os.system("taskkill /IM chrome.exe /F")
@@ -511,6 +506,7 @@ def execute_shutdown():
     ##  Send kill signal for backend to stop
     os.kill(current_pid, signal.SIGTERM)
 
+    return {"status": "Kiosk Closed"}
 
 @app.get("/setup")
 def get_setup(request: Request):

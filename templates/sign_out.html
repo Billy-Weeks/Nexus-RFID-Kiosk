@@ -33,7 +33,7 @@
 
     <div id="password-modal">
             
-        <form action="/shutdown_kiosk" method="post">
+        <form id="shutdown-form" action="/shutdown_kiosk" method="post">
 
             <input type="password" name="admin_pass" id="modal-pass-input" required autofocus placeholder="Enter password" />
 
@@ -59,6 +59,39 @@
         function hideModal() {
             modalBox.style.display = "none";
         }
+
+        const shutdownForm = document.getElementById("shutdown-form");
+
+        shutddownForm.addEventListener("submit", async function (event) {
+
+            event.preventDefault();
+
+            const formData = new FormData(this);
+
+            try {
+                const response1 = await fetch('/shutdown_kiosk', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response1.redirected) {
+                    window.location.href = response1.url;
+                    return;
+                }
+
+                const data1 = await response1.json();
+
+                if (data1.status == "success") {
+                    document.body.innerHTML = "<h1 class='cinematic-title' style='text-align: center; margin-top: 20%;'>Terminal closed...</h1>";
+
+                    await fetch('/execute_shutdown', {
+                        method: 'POST'
+                    });
+                }
+            } catch (error) {
+                console.error("Shutdown process failed:", error);
+            }
+        });
 
     </script>
 
