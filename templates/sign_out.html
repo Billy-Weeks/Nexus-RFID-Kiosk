@@ -62,7 +62,7 @@
 
         const shutdownForm = document.getElementById("shutdown-form");
 
-        shutddownForm.addEventListener("submit", async function (event) {
+        shutdownForm.addEventListener("submit", async function (event) {
 
             event.preventDefault();
 
@@ -81,7 +81,7 @@
 
                 const data1 = await response1.json();
 
-                if (data1.status == "success") {
+                if (data1.status == "Terminal Closed") {
                     document.body.innerHTML = "<h1 class='cinematic-title' style='text-align: center; margin-top: 20%;'>Terminal closed...</h1>";
 
                     await fetch('/execute_shutdown', {
