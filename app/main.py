@@ -35,7 +35,7 @@ url: str = os.environ.get("SUPABASE_URL") ## Get Supabase URL from environment v
 key: str = os.environ.get("SUPABASE_KEY") ## Get Supabase Key from environment variable
 
 ##  Check so that supabase doesn't attempt to conenct to a non-existent database
-if not os.path.exists(".env"):
+if not url or not key:
     supabase = None
 
 else:

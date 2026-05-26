@@ -14,14 +14,40 @@
 
     <div class="app-container">
 
-        <form action="/bulk_import" method="post" enctype="multipart/form-data">
+        <form action="/bulk_import" id="csv-form" method="post" enctype="multipart/form-data">
 
-            <input type="file" accept=".csv" name="input_file" required />
+            <div class="button-stack" style="justify-content: center; flex-direction: column; gap: 30px">
+                <input type="file" style="display: none" accept=".csv" name="input_file" id="input_file" required />
+                <label for="input_file" class="dash-btn">Choose file</label>
 
-            <button type="submit">Upload CSV</button>
+                <span id="file-name" style="color: #00d4ff; font-size: 1.3rem; margin-bottom: 20px; fo">No file chosen</span>
+            </div>
+
+            
 
         </form>
+
+        <div class="button-stack" style="justify-content: center">
+            <button type="submit" class="dash-btn" form="csv-form">Upload CSV</button>
+            <a href="/dashboard" class="dash-btn">Back to Dashboard</a>
+        </div>
+
+        
     </div>
+
+    <script>
+        const fileInput = document.getElementById('input_file');
+        const fileNameDisplay = document.getElementById('file-name');
+
+        fileInput.addEventListener('change', function (event) {
+            if (fileInput.files.length > 0) {
+                fileNameDisplay.textContent = fileInput.files[0].name;
+            } else {
+                fileNameDisplay.textContent = 'No file chosen';
+            } 
+        });
+    </script>
+
 </body>
 
 </html>
