@@ -18,7 +18,7 @@
         <div id="input-area" style="display: {% if status == 'success' %}none{% else %}block{% endif %};">
 
             
-            <form action="/admin_tools" method="post" novalidate> <!--novalidate overrides default HTML5 validation allow for customized alerts-->
+            <form action="/add_admin" method="post" novalidate> <!--novalidate overrides default HTML5 validation allow for customized alerts-->
 
                 <div class="field-style">
                     <label for="first_name_input">First Name:</label>
@@ -42,7 +42,7 @@
             </form>
 
             <div class="button-stack" style="justify-content: center">
-                <a href="/dashboard" class="dash-btn">Back to Dashboard</a>
+                <a href="/admin_tools" class="dash-btn">Back to Tools</a>
             </div>
         </div>
 
@@ -96,7 +96,7 @@
 
         {% if status == 'success' %}
         setTimeout(() => {
-            window.location.href = "/admin_tools";
+            window.location.href = "/add_admin";
         }, 3000);
         {% endif %}
     </script>

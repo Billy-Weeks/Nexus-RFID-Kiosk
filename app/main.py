@@ -578,8 +578,8 @@ def initialization(request: Request):
                                       name="initialization.html",
                                       context={"message": "Saving Credentials...."})
 
-@app.get("/admin_tools")
-def get_tools(request: Request):
+@app.get("/add_admin")
+def get_add_admin(request: Request):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303)
@@ -591,15 +591,15 @@ def get_tools(request: Request):
     role = request.session.pop("role", "")
     
     return templates.TemplateResponse(request=request,
-                                      name="admin_tools.html",
+                                      name="add_admin.html",
                                       context={"message": message,
                                                "status": status,
                                                "first": first,
                                                "last": last,
                                                "role": role})
 
-@app.post("/admin_tools")
-def post_tools(request: Request, first: str = Form(...), last: str = Form(...), role: str = Form(...), scanned_id: str = Form()):
+@app.post("/add_admin")
+def post_add_admin(request: Request, first: str = Form(...), last: str = Form(...), role: str = Form(...), scanned_id: str = Form()):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303)
@@ -615,7 +615,7 @@ def post_tools(request: Request, first: str = Form(...), last: str = Form(...), 
         request.session['role'] = role
         request.session['scanned_id'] = scanned_id
 
-        return RedirectResponse(url="/admin_tools", status_code=303)
+        return RedirectResponse(url="/add_admin", status_code=303)
 
     check = supabase.table('admin').select('*').eq('nfc_id', scanned_id).execute()
 
@@ -628,7 +628,7 @@ def post_tools(request: Request, first: str = Form(...), last: str = Form(...), 
         request.session['last'] = last
         request.session['role'] = role
 
-        return RedirectResponse(url="/admin_tools", status_code=303)
+        return RedirectResponse(url="/add_admin", status_code=303)
 
     ##  Add new admin to database (after passing error checks)
     ##  First create a dictionary to hold new admin information, then insert into database
@@ -640,4 +640,4 @@ def post_tools(request: Request, first: str = Form(...), last: str = Form(...), 
     request.session["flash_msg"] = f"{first} {last} has been successfully added as an admin."
     request.session["status"] = "success"
     
-    return RedirectResponse(url="/admin_tools", status_code=303)
+    return RedirectResponse(url="/add_admin", status_code=303)
