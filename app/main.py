@@ -578,6 +578,15 @@ def initialization(request: Request):
                                       name="initialization.html",
                                       context={"message": "Saving Credentials...."})
 
+@app.get("/admin_tools")
+def admin_tools(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicisous users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+    return templates.TemplateResponse(request=request,
+                                      name="admin_tools.html",
+                                      context={})
+
 @app.get("/add_admin")
 def get_add_admin(request: Request):
     ##  Check to see if user is admin (security measure to prevent malicisous users)
