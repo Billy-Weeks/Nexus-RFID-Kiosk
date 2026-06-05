@@ -9,6 +9,8 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 ### Admin & User Features
 * **Batch User Additions:** Reads from a .csv file (such as from a Google Doc or Excel spreadsheet), adds and assigns RFID cards to a large batch of users at once. Useful for beginning of year/semester events.
 * **Add Onsite:** Gives clubs/event coordinators the ability to add members during the event. Updates database in realtime.
+* **Active Session Recovery** The dashboard intelligently tracks active event states via secure session cookies. If an admin navigates away from the scanning terminal during a live event, a "Return to Event" gateway ensures they can seamlessly resume the session without losing context or requiring reentry of event details.
+* **Centralized Admin Hub** Complex operations (User Management, NFC Provisioning, Lost & Found) are cleanly decoupled from the main dashboard into a dedicated Admin Tools hub, streamlining the primary interface and preventing desctructive accidental clicks.
 * **Dynamic Event Naming:** Each event can have different names (i.e. Workshop #2, Mock Technical Interview Event, etc.). Allows for separating attendance by event.
 * **Start & Stop Event:** Once an event begins, each member scanned in is attached to that event. At the end of the event, the admin or coordinator can stop the event, setting up for future events.
 * **Lost & Found:** Function allows for club officers to scan a lost card and retrieve the name of the owner by visual feedback on the screen.
