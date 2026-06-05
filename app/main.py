@@ -463,7 +463,7 @@ def lost_found_post(request: Request, scanned_id: str = Form(...)):
 
     ##  Escape check
     if scanned_id == ESCAPE_PASSWORD or admin.data:
-        return RedirectResponse(url="/add_users", status_code=303)
+        return RedirectResponse(url="/admin_tools", status_code=303)
 
     card = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
 
