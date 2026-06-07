@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Analytics</title>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <h1>Event Analytics</h1>
+
+        {% if not current_data %}
+        <h2>No Event Currently in Progress</h2>
+
+        {% else %}
+        <h2>Event Attendance for {{ ev_name }}</h2>
+        <!--Rest of the logic to display attendance data-->
+        <div class="terminal-feed">
+            
+            {% for entry in current_data %}
+            <div class="entry">
+
+                <span class="log-time">{{ entry.time }}</span>
+                <span class="log-name">{{ entry.name }}</span>
+
+
+            </div>
+            {% endfor %}
+        </div>
+
+        {% endif %}
+
+        <!--Past Events button-->
+        <div class="button-stack">
+            <a href="/history" class="dash-btn">Access Event Archive</a>
+        </div>
+    </div>
+
+</body>
+
+</html>

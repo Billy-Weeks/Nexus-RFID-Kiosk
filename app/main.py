@@ -678,7 +678,8 @@ def get_analytics(request:Request):
 
     return templates.TemplateResponse(request=request,
                                       name="analytics.html",
-                                      context={'current_data': current_data})
+                                      context={'current_data': current_data,
+                                               'ev_name': current_event})
 
 @app.get("/history")
 def get_history(request: Request):
