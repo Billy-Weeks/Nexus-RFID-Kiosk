@@ -662,9 +662,7 @@ def get_analytics(request:Request):
     current_data = []
 
     if not request.session.get("event_name"):
-        # store "No Event Currently in Progress" in event variable to prevent errors in template
-        current_data = "No Event Currently in Progress"
-
+        # returns empty list in event variable to prevent errors in template
         return templates.TemplateResponse(request=request,
                                           name="analytics.html",
                                           context={'current_data': current_data})
