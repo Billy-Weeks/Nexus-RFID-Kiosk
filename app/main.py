@@ -62,7 +62,6 @@ templates = Jinja2Templates(directory=os.path.join(base_path, "templates"))
 ##  Mount the static files directory to serve CSS and other static assets
 app.mount("/static", StaticFiles(directory=os.path.join(base_path, "static")), name="static")
 
-##  Global event variable to hold the current event name, which can be updated by the admin
 
 
 ##  Decorator for the root endpoint and then define 
@@ -650,3 +649,56 @@ def post_add_admin(request: Request, first: str = Form(...), last: str = Form(..
     request.session["status"] = "success"
     
     return RedirectResponse(url="/add_admin", status_code=303)
+
+@app.get("/analytics")
+def get_analytics(request:Request):
+    ## Security check to prevent malicious users from accessing analytics page
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    ##  Logic for real time attendance tracking
+
+    ##  Grab data into a list of dictionaries
+    current_data = []
+
+    if not request.session.get("event_name"):
+        # store "No Event Currently in Progress" in event variable to prevent errors in template
+        current_data = "No Event Currently in Progress"
+
+        return templates.TemplateResponse(request=request,
+                                          name="analytics.html",
+                                          context={'current_data': current_data})
+
+    ##  Store current events name in a variable for comparison
+    current_event = request.session.get("event_name")
+
+    ## Grab attendance data using a 'join'  
+    curr_raw_data = supabase.table('attendance_log').select('scan_time, users(first_name, last_name)').eq('event_name', current_event).execute()
+
+    for data in curr_raw_data.data:
+        current_data.append({'time': data['scan_time'], 'name': data['users']['first_name'] + ' ' + data['users']['last_name']})
+
+    return templates.TemplateResponse(request=request,
+                                      name="analytics.html",
+                                      context={'current_data': current_data})
+
+@app.get("/history")
+def get_history(request: Request):
+    ## Security check to prevent malicious users from accessing analytics page
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    current_event = request.session.get("event_name")
+
+    ##  Grab previsous event names for dropdown menu
+    events = supabase.table('attendance_log').select('event_name').execute()
+
+    ##  Set to hold event names
+    event_set = set()
+    for event in events.data:
+        if event.get('event_name') and event['event_name'] != current_event:
+            event_set.add(event['event_name'])
+
+    return templates.TemplateResponse(request=request,
+                                      name="history.html",
+                                      context={'events': sorted(list(event_set))})
