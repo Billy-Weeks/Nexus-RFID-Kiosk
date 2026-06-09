@@ -19,6 +19,8 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 * **System Shutdown:** Performs a complete shutdown of the program, ensuring data has been saved to the database, and admin has been signed out complely. 
 * **Admin NFC Escape Sequence:** Allows administrators to use a designated NFC tag to exit scan loops, replacing the need for manual keyboard escape sequences
 * **Secure Admin Provisioning** Dedicated `/admin_tools` workflow for registering new system administrators with First Name, Last Name, Club Role, and a uniquely assigned NFC credential.
+* **Live Attendance Dashboard** A real-time, terminal-styled interface that asynchronously tracks event check-ins. It automatically fetches and updates the screen with new scans every few seconds without ever requiring a manual page refresh.
+* **Historical Event Archive** A dedicated analytics portal allowing administrators to query and review attendance records for any past event. It features a defensive-programmed UI that dynamically populates dropdown menus based on real database records.
 
 
 
@@ -33,6 +35,8 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 * **Real-Time Cloud Sync:** Instantaneous attendance and credential verification via Supabase integration.
 * **Customer Hardware-Level Form Validation** Bypasses standard, immersion-breaking browser alerts (via HTML5 `novalidate`) in favor of a customer JavaScript validation loop. Unfilled inputs are dynamically caught using `.checkValidity()` and `.requestSubmit()`, instantly triggering localized, red glowing CSS error stateson specific missing fields without reloading the page or losing terminal state.
 * **Deadlock Prevention** Physical scanner inputs are automatically wiped via JavaScripty upon both successful and failed form submission, preventing the scanner hardware from "locking up" if an admin forgets a required field.
+* **Custom REST API Endpoints:** Decouples the frontend UI from backend database queries using dedicated JSON-serving API routes (e.g., `/api/live-attendance`), allowing asynchronous JavaScript polling to handle real-time data cleanly and efficiently.
+* **Component-Driven UI Design:** Utilizes modular, flexbox-based CSS architecture to maintain a consistent, physical-hardware aesthetic across both live and historical data views, prioritizing code reuse.
 
 
 ---
@@ -184,4 +188,3 @@ This system solves stale memory states using a "Phoenix Protocol" approach. When
 
 * **Cross-Platform Compilation:** Future releases will also have executables available for download for macOS and Linux operating systems.
 * **Dynamic Schema Generation:** Implement dynamic table creation within the Python architecture to automatically generate required database tables on initial setup.
-* **In-App Analytics & Reporting:** Generate end-of-event attendance summaries and historical engagement reports directly within the kiosk interface, eliminating the need for database-level administrative access.
