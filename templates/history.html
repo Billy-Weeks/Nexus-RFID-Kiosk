@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Analytics</title>
+</head>
+
+<body>
+
+    <div class="app-container">
+        <h1>Past Event Analytics</h1>
+
+        <!-- Check if no past events are available -->
+        {% if not events %}
+
+            <h2>No Past Events Available</h2>
+
+        {% else %}
+
+            <!-- Past Events Drop Down Menu -->
+            <form action="/history" method="post" class="archive-form">
+                <label for="event-selection">Select an Event:</label>
+                <select name="event" id="event-selection" autofocus>
+
+                    <option value="" disabled selected>-- Choose an Event --</option>
+
+                    {% for event in events %}
+
+                        <option value="{{ event }}">{{ event }}</option>
+
+                    {% endfor %}
+
+                </select>
+
+                <!-- Submit button -->
+                <button type="submit" class="dash-btn">View Event Attendance</button>
+            </form>
+
+        {% endif %}
+        
+
+       
+    </div>
+
+</body>
+
+</html>
