@@ -151,6 +151,31 @@ body {
 	gap: 10px;
 }
 
+.terminal-feed {
+    /* Possibly add styling for background-color */
+    max-height: 300px;
+	overflow-y: auto;
+	font-family:monospace;
+}
+
+.entry {
+	display:flex;
+	gap:15px;
+	border-bottom: 1px solid #333;
+	padding: 10px 0;
+}
+
+.log-time {
+	color: #666666;
+	font-size: 0.9em;
+}
+
+.log-name {
+    color: #4af625;
+    font-weight: bold;
+	letter-spacing: 1px;
+}
+
 
 @keyframes pulse-glow {
 	0% {
