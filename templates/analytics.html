@@ -39,6 +39,37 @@
         </div>
     </div>
 
+    <script>
+        //Auto-refresh the page every 20 seconds to update analytics data
+        async function updateTerminalFeed() {
+
+            const feedContainer = document.querySelector('.terminal-feed');
+
+            if (!feedContainer) {
+
+                return;
+        }
+
+        const response = await fetch('/api/live-attendance');
+        const newData = await response.json();
+
+        feedContainer.innerHTML = '';
+
+        newData.forEach(entry => {
+            
+            const logHTML =`
+                <div class="entry">
+                    <span class="log-time">${entry.time}</span>
+                    <span class="log-name">${entry.name}</span>
+                </div>
+            `;
+            feedContainer.innerHTML += logHTML;
+
+        });
+        }
+        setInterval(updateTerminalFeed, 20000);
+    </script>
+
 </body>
 
 </html>
