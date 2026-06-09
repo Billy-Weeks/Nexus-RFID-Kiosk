@@ -15,47 +15,52 @@
         <!-- Check if no past events are available -->
         {% if not events %}
 
-            <h2>No Past Events Available</h2>
+        <h2>No Past Events Available</h2>
 
         {% else %}
 
-            <!-- Past Events Drop Down Menu -->
-            <form action="/history" method="post" class="archive-form">
-                <label for="event-selection">Select an Event:</label>
-                <select name="event" id="event-selection" autofocus>
+        <!-- Past Events Drop Down Menu -->
+        <form action="/history" method="post" class="archive-form">
+            <label for="event-selection">Select an Event:</label>
+            <select name="event" id="event-selection" autofocus>
 
-                    <option value="" disabled selected>-- Choose an Event --</option>
+                <option value="" disabled selected>-- Choose an Event --</option>
 
-                    {% for event in events %}
+                {% for event in events %}
 
-                        <option value="{{ event }}">{{ event }}</option>
-
-                    {% endfor %}
-
-                </select>
-
-                <!-- Submit button -->
-                <button type="submit" class="dash-btn">View Event Attendance</button>
-            </form>
-
-        
-        <!-- Logic to display selected event data -->
-        {% if selected_event %}
-            <div class="terminal-feed">
-                <h2>Attendance for {{ event_name }}</h2>
-
-                {% for event in selected_event %}
-                <div class="entry">
-                    <span class="log-time">{{ event.time }}</span>
-                    <span class="log-name">{{ event.name }}</span>
-                </div>
+                <option value="{{ event }}">{{ event }}</option>
 
                 {% endfor %}
 
+            </select>
+
+            <!-- Submit button -->
+            <button type="submit" class="dash-btn">View Event Attendance</button>
+        </form>
+
+
+        {% endif %}
+
+        <a href="/analytics" class="dash-btn" style="display: inline-block; margin-top:20px">Return to Current Event Analytics</a>
+
+
+        <!-- Logic to display selected event data -->
+        {% if selected_event %}
+        <div class="terminal-feed">
+            <h2>Attendance for {{ event_name }}</h2>
+
+            {% for event in selected_event %}
+            <div class="entry">
+                <span class="log-time">{{ event.time }}</span>
+                <span class="log-name">{{ event.name }}</span>
             </div>
-                {% endif %}
+
+            {% endfor %}
 
         </div>
+        {% endif %}
+
+    </div>
 
 </body>
 

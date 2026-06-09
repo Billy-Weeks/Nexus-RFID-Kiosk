@@ -70,6 +70,9 @@ app.mount("/static", StaticFiles(directory=os.path.join(base_path, "static")), n
 def read_root(request: Request):
     ##  Root endpoint... works as "landing page" for program start-up
 
+    ##  Ensures previous session's cookies (passwords, event names, etc) have been cleared for new session
+    request.session.clear()
+
     if not os.path.exists(".env"):
         ##  Create security flag so malicious users don't gain unwarranted access
         request.session["is_setup"] = True
