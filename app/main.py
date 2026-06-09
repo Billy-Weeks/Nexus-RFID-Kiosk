@@ -701,3 +701,30 @@ def get_history(request: Request):
     return templates.TemplateResponse(request=request,
                                       name="history.html",
                                       context={'events': sorted(list(event_set))})
+
+##  API route to grab current event attendance data for analytics page
+@app.get("/api/live-attendance")
+def get_live_attendance(request: Request):
+    ## Security check to prevent malicious users from accessing analytics page
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    ##  Logic for real time attendance tracking
+
+    ##  Grab data into a list of dictionaries
+    current_data = []
+
+    if not request.session.get("event_name"):
+        # returns empty list in event variable to prevent errors in template
+        return current_data
+
+    ##  Store current events name in a variable for comparison
+    current_event = request.session.get("event_name")
+
+    ## Grab attendance data using a 'join'  
+    curr_raw_data = supabase.table('attendance_log').select('scan_time, users(first_name, last_name)').eq('event_name', current_event).execute()
+
+    for data in curr_raw_data.data:
+        current_data.append({'time': data['scan_time'], 'name': data['users']['first_name'] + ' ' + data['users']['last_name']})
+    
+    return current_data
