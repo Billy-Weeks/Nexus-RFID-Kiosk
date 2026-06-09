@@ -754,5 +754,7 @@ def post_history(request:Request, event: str = Form(...)):
 
     return templates.TemplateResponse(request=request,
                                       name="history.html",
-                                      context={'events': sorted(list(event_set)), 'selected_event': event_data})
+                                      context={'events': sorted(list(event_set)),
+                                               'selected_event': event_data,
+                                               'event_name': event})
 

@@ -38,11 +38,24 @@
                 <button type="submit" class="dash-btn">View Event Attendance</button>
             </form>
 
-        {% endif %}
         
+        <!-- Logic to display selected event data -->
+        {% if selected_event %}
+            <div class="terminal-feed">
+                <h2>Attendance for {{ event_name }}</h2>
 
-       
-    </div>
+                {% for event in selected_event %}
+                <div class="entry">
+                    <span class="log-time">{{ event.time }}</span>
+                    <span class="log-name">{{ event.name }}</span>
+                </div>
+
+                {% endfor %}
+
+            </div>
+                {% endif %}
+
+        </div>
 
 </body>
 
