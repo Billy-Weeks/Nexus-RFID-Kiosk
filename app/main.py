@@ -681,27 +681,6 @@ def get_analytics(request:Request):
                                       context={'current_data': current_data,
                                                'ev_name': current_event})
 
-@app.get("/history")
-def get_history(request: Request):
-    ## Security check to prevent malicious users from accessing analytics page
-    if not request.session.get("is_admin"):
-        return RedirectResponse(url="/admin", status_code=303)
-
-    current_event = request.session.get("event_name")
-
-    ##  Grab previsous event names for dropdown menu
-    events = supabase.table('attendance_log').select('event_name').execute()
-
-    ##  Set to hold event names
-    event_set = set()
-    for event in events.data:
-        if event.get('event_name') and event['event_name'] != current_event:
-            event_set.add(event['event_name'])
-
-    return templates.TemplateResponse(request=request,
-                                      name="history.html",
-                                      context={'events': sorted(list(event_set))})
-
 ##  API route to grab current event attendance data for analytics page
 @app.get("/api/live-attendance")
 def get_live_attendance(request: Request):
@@ -728,3 +707,52 @@ def get_live_attendance(request: Request):
         current_data.append({'time': data['scan_time'], 'name': data['users']['first_name'] + ' ' + data['users']['last_name']})
         
     return current_data
+
+@app.get("/history")
+def get_history(request: Request):
+    ## Security check to prevent malicious users from accessing analytics page
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    current_event = request.session.get("event_name")
+
+    ##  Grab previsous event names for dropdown menu
+    events = supabase.table('attendance_log').select('event_name').execute()
+
+    ##  Set to hold event names
+    event_set = set()
+    for event in events.data:
+        if event.get('event_name') and event['event_name'] != current_event:
+            event_set.add(event['event_name'])
+
+    return templates.TemplateResponse(request=request,
+                                      name="history.html",
+                                      context={'events': sorted(list(event_set))})
+
+@app.post("/history")
+def post_history(request:Request, event: str = Form(...)):
+    ## Security check to prevent malicious users from accessing analytics page
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    event_data_raw = supabase.table('attendance_log').select('scan_time, users(first_name, last_name)').eq('event_name', event).execute()
+    event_data = []
+
+    for data in event_data_raw.data:
+        event_data.append({'time': data['scan_time'], 'name': data['users']['first_name'] + ' ' + data['users']['last_name']})
+
+    current_event = request.session.get("event_name")
+
+    ##  Grab previsous event names for dropdown menu
+    events_list = supabase.table('attendance_log').select('event_name').execute()
+
+    ##  Set to hold event names
+    event_set = set()
+    for event_list in events_list.data:
+        if event_list.get('event_name') and event_list['event_name'] != current_event:
+            event_set.add(event_list['event_name'])
+
+    return templates.TemplateResponse(request=request,
+                                      name="history.html",
+                                      context={'events': sorted(list(event_set)), 'selected_event': event_data})
+
