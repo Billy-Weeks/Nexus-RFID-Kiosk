@@ -12,7 +12,11 @@
     <div class="app-container">
         <h1>Event Analytics</h1>
 
-        {% if not current_data %}
+        <!--Database problem: say so plainly instead of showing an empty feed-->
+        {% if error %}
+        <h2 class="error">{{ error }}</h2>
+
+        {% elif not current_data %}
         <h2>No Event Currently in Progress</h2>
 
         {% else %}
@@ -35,6 +39,7 @@
 
         <!--Past Events button-->
         <div class="button-stack">
+            <a href="/scan" class="dash-btn">Back to Scanning</a>
             <a href="/history" class="dash-btn">Access Event Archive</a>
             <a href="/admin_tools" class="dash-btn">Return to Tools</a>
         </div>

@@ -116,7 +116,7 @@ Records timestamped check-in events.
 | Column | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
 | `log_id` | `bigint` | Primary Key | Auto-incrementing log identifier. |
-| `user_id` | `uuid` | Not Null | References the specific user who scanned in. |
+| `user_id` | `uuid` | Not Null, Foreign Key → `users.user_id` | References the specific user who scanned in. The foreign key is **required** &mdash; the analytics and archive views join attendance back to the member directory, and PostgREST rejects that join if the relationship is not declared. |
 | `scan_time` | `timestamptz` | Not Null | Auto-generated timestamp of the scan (defaults to `now()`). |
 | `event_name` | `text` | Nullable | The active event occurring during the scan. |
 
@@ -158,7 +158,11 @@ create table public.attendance_log (
   user_id uuid not null,
   scan_time timestamp with time zone not null default now(),
   event_name text null,
-  constraint attendance_log_pkey primary key (log_id)
+  constraint attendance_log_pkey primary key (log_id),
+  -- Required: the analytics and archive views join attendance back to users.
+  -- Without this foreign key the join is rejected outright (PostgREST PGRST200).
+  constraint attendance_log_user_id_fkey foreign key (user_id)
+    references public.users (user_id) on delete cascade
 );
 
 create table public.admin (
@@ -171,6 +175,44 @@ create table public.admin (
   constraint admin_nfc_id_key unique (nfc_id)
 );
 ```
+
+</details>
+
+<details>
+<summary><b>Upgrading an existing database (missing attendance relationship)</b></summary>
+
+Databases created before the foreign key was documented will load the dashboard normally
+but fail on the analytics and archive views with
+`PGRST200: Could not find a relationship between 'attendance_log' and 'users'`.
+
+Check for attendance rows whose member no longer exists &mdash; the constraint cannot be
+added while any remain:
+
+```sql
+select a.* from public.attendance_log a
+left join public.users u on u.user_id = a.user_id
+where u.user_id is null;
+```
+
+If that returns rows, remove them (the member record is gone, so the entries cannot be
+attributed):
+
+```sql
+delete from public.attendance_log a
+where not exists (select 1 from public.users u where u.user_id = a.user_id);
+```
+
+Then declare the relationship:
+
+```sql
+alter table public.attendance_log
+  add constraint attendance_log_user_id_fkey
+  foreign key (user_id) references public.users (user_id)
+  on delete cascade;
+```
+
+Supabase refreshes its schema cache within a few seconds. To force it immediately, run
+`notify pgrst, 'reload schema';`
 
 </details>
 

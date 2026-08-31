@@ -12,8 +12,13 @@
     <div class="app-container">
         <h1>Past Event Analytics</h1>
 
+        <!-- Database problem: say so plainly instead of claiming there are no events -->
+        {% if error %}
+
+        <h2 class="error">{{ error }}</h2>
+
         <!-- Check if no past events are available -->
-        {% if not events %}
+        {% elif not events %}
 
         <h2>No Past Events Available</h2>
 
@@ -41,7 +46,11 @@
 
         {% endif %}
 
-        <a href="/analytics" class="dash-btn" style="display: inline-block; margin-top:20px">Return to Current Event Analytics</a>
+        <div class="button-stack">
+            <a href="/scan" class="dash-btn">Back to Scanning</a>
+            <a href="/analytics" class="dash-btn">Return to Current Event Analytics</a>
+            <a href="/admin_tools" class="dash-btn">Return to Tools</a>
+        </div>
 
 
         <!-- Logic to display selected event data -->

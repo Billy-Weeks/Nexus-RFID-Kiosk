@@ -101,6 +101,61 @@ def find_member(first: str, last: str, email: str):
     return result.data[0], False
 
 
+##  Helper to pull the attendance feed for a single event.
+##  Every analytics view needs the same join, so it only lives here.
+##  Returns (rows, error_message). error_message is None on success, otherwise the
+##  caller renders it instead of the feed rather than dying with a 500.
+def fetch_attendance(event_name: str):
+
+    try:
+        ## Grab attendance data using a 'join'
+        raw = supabase.table('attendance_log').select('scan_time, users(first_name, last_name)').eq('event_name', event_name).execute()
+
+    except Exception as error:
+        ##  Most likely cause is a database that is missing the attendance_log -> users
+        ##  foreign key, which PostgREST needs before it will build the join at all.
+        ##  See the "Upgrading an existing database" section of the README.
+        print(f"[analytics] attendance lookup failed for '{event_name}': {error}")
+        return [], "Attendance data is unavailable. The database may be misconfigured - see an officer."
+
+    rows = []
+
+    for data in raw.data:
+        ##  Skip any log entry whose member record no longer exists so one bad
+        ##  row can't take down the whole feed
+        member = data.get('users')
+
+        if not member:
+            continue
+
+        rows.append({'time': data['scan_time'],
+                     'name': f"{member['first_name']} {member['last_name']}"})
+
+    return rows, None
+
+
+##  Helper to build the dropdown of past events, excluding whichever event is live.
+##  Returns (sorted_names, error_message) using the same convention as fetch_attendance.
+def past_event_names(current_event: str):
+
+    try:
+        ##  Grab previous event names for dropdown menu
+        events = supabase.table('attendance_log').select('event_name').execute()
+
+    except Exception as error:
+        print(f"[history] event list lookup failed: {error}")
+        return [], "Past events could not be loaded. The database may be misconfigured - see an officer."
+
+    ##  Set to hold event names
+    event_set = set()
+
+    for event in events.data:
+        if event.get('event_name') and event['event_name'] != current_event:
+            event_set.add(event['event_name'])
+
+    return sorted(event_set), None
+
+
 ##  Decorator for the root endpoint and then define
 ##  the function that will be called when the root endpoint is accessed
 @app.get("/")
@@ -219,19 +274,34 @@ def scan(request: Request, scanned_id: str = Form(...)):
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303) ##   Redirects back to login page if user is not admin
 
-    admin = supabase.table('admin').select('*').eq('nfc_id', scanned_id).execute()
+    ##  Every database call in the scan loop is wrapped together. A failure here must
+    ##  never strand the terminal on an error page, so we fall through to the scanning
+    ##  screen with a message and the input box still live for the next member.
+    try:
+        admin = supabase.table('admin').select('*').eq('nfc_id', scanned_id).execute()
 
-    ##  Check to make sure escape password wasn't inputted
-    if scanned_id == ESCAPE_PASSWORD or admin.data:
-        ##  Redirect to dashboard to use other admin functions
-        return RedirectResponse(url="/dashboard", status_code=303)
+        ##  Check to make sure escape password wasn't inputted
+        if scanned_id == ESCAPE_PASSWORD or admin.data:
+            ##  Redirect to dashboard to use other admin functions
+            return RedirectResponse(url="/dashboard", status_code=303)
 
-    ##  Checking to make sure the scanned ID is in the database already
-    check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()     
+        ##  Checking to make sure the scanned ID is in the database already
+        check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()
+
+        if check.data:
+            ##  Record the attendance against the event held in the session
+            recorded = log_attendance(request, check.data[0]['user_id'])
+
+    except Exception as error:
+        print(f"[scan] check-in failed for card '{scanned_id}': {error}")
+
+        return templates.TemplateResponse(request=request,
+                                          name="index.html",
+                                          context={"status": "error",
+                                                   "message": "Could not reach the database. Please scan again or see an officer.",
+                                                   "event_name": request.session.get("event_name")})
 
     if check.data:
-        ##  Record the attendance against the event held in the session
-        recorded = log_attendance(request, check.data[0]['user_id'])
 
         greeting = f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!"
 
@@ -824,16 +894,14 @@ def get_analytics(request:Request):
     ##  Store current events name in a variable for comparison
     current_event = request.session.get("event_name")
 
-    ## Grab attendance data using a 'join'  
-    curr_raw_data = supabase.table('attendance_log').select('scan_time, users(first_name, last_name)').eq('event_name', current_event).execute()
-
-    for data in curr_raw_data.data:
-        current_data.append({'time': data['scan_time'], 'name': data['users']['first_name'] + ' ' + data['users']['last_name']})
+    ## Grab attendance data using a 'join'
+    current_data, error = fetch_attendance(current_event)
 
     return templates.TemplateResponse(request=request,
                                       name="analytics.html",
                                       context={'current_data': current_data,
-                                               'ev_name': current_event})
+                                               'ev_name': current_event,
+                                               'error': error})
 
 ##  API route to grab current event attendance data for analytics page
 @app.get("/api/live-attendance")
@@ -853,13 +921,12 @@ def get_live_attendance(request: Request):
 
     ##  Store current events name in a variable for comparison
     current_event = request.session.get("event_name")
-    
-    ## Grab attendance data using a 'join'  
-    curr_raw_data = supabase.table('attendance_log').select('scan_time, users(first_name, last_name)').eq('event_name', current_event).execute()
 
-    for data in curr_raw_data.data:
-        current_data.append({'time': data['scan_time'], 'name': data['users']['first_name'] + ' ' + data['users']['last_name']})
-        
+    ## Grab attendance data using a 'join'
+    ##  On failure this returns an empty list, so the polling JavaScript simply
+    ##  leaves the last known feed on screen instead of erroring out
+    current_data, error = fetch_attendance(current_event)
+
     return current_data
 
 @app.get("/history")
@@ -870,18 +937,13 @@ def get_history(request: Request):
 
     current_event = request.session.get("event_name")
 
-    ##  Grab previsous event names for dropdown menu
-    events = supabase.table('attendance_log').select('event_name').execute()
-
-    ##  Set to hold event names
-    event_set = set()
-    for event in events.data:
-        if event.get('event_name') and event['event_name'] != current_event:
-            event_set.add(event['event_name'])
+    ##  Grab previous event names for dropdown menu
+    events, error = past_event_names(current_event)
 
     return templates.TemplateResponse(request=request,
                                       name="history.html",
-                                      context={'events': sorted(list(event_set))})
+                                      context={'events': events,
+                                               'error': error})
 
 @app.post("/history")
 def post_history(request:Request, event: str = Form(...)):
@@ -889,26 +951,18 @@ def post_history(request:Request, event: str = Form(...)):
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303)
 
-    event_data_raw = supabase.table('attendance_log').select('scan_time, users(first_name, last_name)').eq('event_name', event).execute()
-    event_data = []
-
-    for data in event_data_raw.data:
-        event_data.append({'time': data['scan_time'], 'name': data['users']['first_name'] + ' ' + data['users']['last_name']})
+    ##  Pull the attendance for the chosen event
+    event_data, error = fetch_attendance(event)
 
     current_event = request.session.get("event_name")
 
-    ##  Grab previsous event names for dropdown menu
-    events_list = supabase.table('attendance_log').select('event_name').execute()
-
-    ##  Set to hold event names
-    event_set = set()
-    for event_list in events_list.data:
-        if event_list.get('event_name') and event_list['event_name'] != current_event:
-            event_set.add(event_list['event_name'])
+    ##  Grab previous event names for dropdown menu
+    events, list_error = past_event_names(current_event)
 
     return templates.TemplateResponse(request=request,
                                       name="history.html",
-                                      context={'events': sorted(list(event_set)),
+                                      context={'events': events,
                                                'selected_event': event_data,
-                                               'event_name': event})
+                                               'event_name': event,
+                                               'error': error or list_error})
 
