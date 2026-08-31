@@ -63,8 +63,45 @@ templates = Jinja2Templates(directory=os.path.join(base_path, "templates"))
 app.mount("/static", StaticFiles(directory=os.path.join(base_path, "static")), name="static")
 
 
+##  Helper to record a user's attendance for the event currently stored in the session.
+##  Returns True if a row was actually written, False if no event is running.
+##  Used by /scan, /onsite_form and /onsite_cin so check-in logic only lives in one place.
+def log_attendance(request: Request, user_id: str) -> bool:
 
-##  Decorator for the root endpoint and then define 
+    event_name = request.session.get("event_name")
+
+    ##  No event set means there is nothing to attach attendance to.
+    ##  The caller still succeeds, it just tells the user attendance wasn't recorded.
+    if not event_name:
+        return False
+
+    supabase.table('attendance_log').insert({"event_name": event_name, "user_id": user_id}).execute()
+    return True
+
+
+##  Helper to look a member up by the details they can be expected to know.
+##  Email is the near-unique key, so we search on that and then confirm the name.
+##  Returns (user_row_or_None, name_matched) so the caller can tell the difference
+##  between "confirmed this person" and "that email belongs to somebody else".
+def find_member(first: str, last: str, email: str):
+
+    ##  ilike gives us a case-insensitive match on the email
+    result = supabase.table('users').select('*').ilike('email', email.strip()).execute()
+
+    if not result.data:
+        return None, False
+
+    ##  Look for a row where the typed name also lines up (ignoring case/extra spaces)
+    for row in result.data:
+        if (str(row.get('first_name', '')).strip().lower() == first.strip().lower()
+                and str(row.get('last_name', '')).strip().lower() == last.strip().lower()):
+            return row, True
+
+    ##  Email is on file but under a different name, let the caller refuse the request
+    return result.data[0], False
+
+
+##  Decorator for the root endpoint and then define
 ##  the function that will be called when the root endpoint is accessed
 @app.get("/")
 def read_root(request: Request):
@@ -193,14 +230,19 @@ def scan(request: Request, scanned_id: str = Form(...)):
     check = supabase.table('users').select('*').eq('card_id', scanned_id).execute()     
 
     if check.data:
-        ##  Package data and update database: user_id
-        update = {"event_name": request.session.get("event_name"), "user_id": check.data[0]['user_id']}
-        supabase.table('attendance_log').insert(update).execute()
+        ##  Record the attendance against the event held in the session
+        recorded = log_attendance(request, check.data[0]['user_id'])
+
+        greeting = f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!"
+
+        ##  Be honest with the user if there was no event to log them against
+        if not recorded:
+            greeting += " (No active event - attendance not recorded.)"
 
         return templates.TemplateResponse(request=request,
                                           name="index.html",
                                           context={"status": "success",
-                                                   "message": f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!",
+                                                   "message": greeting,
                                                    "event_name": request.session.get("event_name")})
 
     else:
@@ -293,7 +335,6 @@ def onsite_form_get(request: Request):
     first = request.session.pop("first", "")
     last = request.session.pop("last", "")
     email = request.session.pop("email", "")
-    major = request.session.pop("major", "")
     message = request.session.pop("flash_msg", "")
     status = request.session.pop("status", "")
 
@@ -302,43 +343,153 @@ def onsite_form_get(request: Request):
     return templates.TemplateResponse(request=request,
                                         name="onsite_form.html",
                                         context={'first': first, 'last': last,
-                                                'email': email, 'major': major,
+                                                'email': email,
                                                 'status': status, 'message': message})
 
 @app.post("/onsite_form")
-def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(...), cin: str = Form(...), email: str = Form(...), major: str = Form(...)):
+def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(...), email: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicious users)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code = 303)
 
-    
+
     ##  Just in case "somehow" a card wasn't scanned/stored
-    if not request.session.get("card_id"):
+    card_id = request.session.get("card_id")
+
+    if not card_id:
         return RedirectResponse(url="/add_onsite", status_code = 303)
 
-    ##  Security check to ensure CIN, which needs to be unique, hasn't already been used
-    cin_exists = supabase.table('users').select('*').eq('cin', cin).execute()
+    ##  Use the details the member typed to see if we already have them on file
+    member, name_matched = find_member(first, last, email)
 
-    if cin_exists.data:
-        ##  Set up error message to be presented to User
-        request.session["flash_msg"] = "CIN already in database. Double check number"
+    ##  Email belongs to somebody with a different name.
+    ##  Refuse rather than risk attaching this card to the wrong person.
+    if member and not name_matched:
+        request.session["flash_msg"] = "Those details don't match our records. Please check your spelling."
         request.session["status"] = "error"
 
         ##  Prepare valid data to be retransmitted without user having to do it
         request.session['first'] = first
         request.session['last'] = last
         request.session['email'] = email
-        request.session['major'] = major
 
         return RedirectResponse(url="/onsite_form", status_code=303)
 
-    ##  Add form values to update dictionary
-    new_user = {"card_id": request.session.pop("card_id", None), "first_name": first,
-                "last_name": last, "cin": cin, "major": major, "email": email}
-    supabase.table('users').insert(new_user).execute()
+    ##  We don't know this person yet, so send them on to collect CIN and major
+    if not member:
+        request.session['pending_first'] = first
+        request.session['pending_last'] = last
+        request.session['pending_email'] = email
 
-    ##  Create a flash message
-    request.session["flash_msg"] = f"{first} {last} has been successfully added to the database!"
+        return RedirectResponse(url="/onsite_cin", status_code=303)
+
+    ##  From here we have confirmed the member. Attach the card only if they don't
+    ##  already have one on file (a card already registered stays untouched).
+    if not member.get('card_id'):
+        supabase.table('users').update({'card_id': card_id}).eq('user_id', member['user_id']).execute()
+        flash = f"Welcome, {member['first_name']}! Card registered"
+
+    else:
+        flash = f"{member['first_name']}, a card is already registered to you"
+
+    ##  Enrolling doubles as a check-in for the running event
+    recorded = log_attendance(request, member['user_id'])
+
+    if recorded:
+        flash += " and you're checked in!"
+
+    else:
+        flash += " (no active event - attendance not recorded)."
+
+    ##  Card has been dealt with, clear it so the next member starts fresh
+    request.session.pop("card_id", None)
+    request.session["flash_msg"] = flash
+
+    ## redirect back to scanning page with success message
+    return RedirectResponse(url="/add_onsite", status_code = 303)
+
+@app.get("/onsite_cin")
+def onsite_cin_get(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+
+    ##  Block direct navigation, this page only makes sense mid-flow
+    if not request.session.get("card_id") or not request.session.get("pending_first"):
+        return RedirectResponse(url="/add_onsite", status_code = 303)
+
+    ##  Unpack .session variables (if populated)
+    major = request.session.pop("major", "")
+    message = request.session.pop("flash_msg", "")
+    status = request.session.pop("status", "")
+
+    return templates.TemplateResponse(request=request,
+                                      name="onsite_cin.html",
+                                      context={'first': request.session.get("pending_first"),
+                                               'major': major,
+                                               'status': status, 'message': message})
+
+@app.post("/onsite_cin")
+def onsite_cin_post(request: Request, cin: str = Form(...), major: str = Form(...)):
+    ##  Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code = 303)
+
+    card_id = request.session.get("card_id")
+
+    ##  Block direct navigation, this page only makes sense mid-flow
+    if not card_id or not request.session.get("pending_first"):
+        return RedirectResponse(url="/add_onsite", status_code = 303)
+
+    ##  Security check to ensure CIN, which needs to be unique, hasn't already been used
+    cin_exists = supabase.table('users').select('*').eq('cin', cin).execute()
+
+    if cin_exists.data:
+        ##  Their record exists but under a name/email that doesn't match what they typed,
+        ##  so we can't safely attach the card. Hand it off to a person.
+        request.session["flash_msg"] = "That CIN is already registered under a different name or email. Please see an officer."
+        request.session["status"] = "error"
+
+        ##  Prepare valid data to be retransmitted without user having to do it
+        request.session['major'] = major
+
+        return RedirectResponse(url="/onsite_cin", status_code=303)
+
+    ##  Add form values to update dictionary
+    new_user = {"card_id": card_id,
+                "first_name": request.session.get("pending_first"),
+                "last_name": request.session.get("pending_last"),
+                "cin": cin, "major": major,
+                "email": request.session.get("pending_email")}
+
+    ##  Wrapped so a race on the unique constraints shows an error instead of a 500
+    try:
+        inserted = supabase.table('users').insert(new_user).execute()
+
+    except Exception:
+        request.session["flash_msg"] = "Could not add you to the database. Please see an officer."
+        request.session["status"] = "error"
+        request.session['major'] = major
+
+        return RedirectResponse(url="/onsite_cin", status_code=303)
+
+    ##  Enrolling doubles as a check-in for the running event
+    recorded = log_attendance(request, inserted.data[0]['user_id'])
+
+    flash = f"{new_user['first_name']} {new_user['last_name']} has been successfully added to the database"
+
+    if recorded:
+        flash += " and checked in!"
+
+    else:
+        flash += " (no active event - attendance not recorded)."
+
+    ##  Everything is written, clear the in-progress details for the next member
+    request.session.pop("card_id", None)
+    request.session.pop("pending_first", None)
+    request.session.pop("pending_last", None)
+    request.session.pop("pending_email", None)
+    request.session["flash_msg"] = flash
 
     ## redirect back to scanning page with success message
     return RedirectResponse(url="/add_onsite", status_code = 303)

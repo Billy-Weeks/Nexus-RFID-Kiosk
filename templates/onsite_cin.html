@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Finish Signing Up</title>
+
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <h2>We don't have you on file yet{% if first %}, {{ first }}{% endif %} &mdash; one more thing.</h2>
+
+        <form action="/onsite_cin" method="post">
+
+            <div class="input-fields">
+
+                <div class="field-style">
+
+                    <label for="cin-input">CIN</label>
+                    <input type="text" id="cin-input" name="cin" required autofocus autocomplete="off" placeholder="1234567" />
+
+                </div>
+
+                <div class="field-style">
+
+                    <label for="major">Major</label>
+                    <input type="text" id="major" name="major" required autocomplete="off" placeholder="Computer Science" value="{{ major }}" />
+
+                </div>
+
+            </div>
+
+            <!--Error message in case the CIN is already taken-->
+            {% if message %}
+                <h2 id="flash-message" class="{{ status }}">{{ message }}</h2>
+            {% endif %}
+
+            <button type="submit">Add to Database</button>
+
+        </form>
+
+    </div>
+
+    <script>
+        /* Script to "turn off" error message and styling */
+
+        const flashMsg = document.getElementById('flash-message');
+        if (flashMsg) {
+            setTimeout(() => {
+                flashMsg.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+
+</body>
+
+</html>

@@ -9,6 +9,9 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 ### Admin & User Features
 * **Batch User Additions:** Reads from a .csv file (such as from a Google Doc or Excel spreadsheet), adds and assigns RFID cards to a large batch of users at once. Useful for beginning of year/semester events.
 * **Add Onsite:** Gives clubs/event coordinators the ability to add members during the event. Updates database in realtime.
+* **Self-Identifying Enrollment:** The onsite flow no longer assumes every scanned card belongs to a stranger. A member taps their card and supplies only the three details they already know by heart — first name, last name, and email — which the system uses as an identity *confirmation* rather than raw data entry. Recognized members (including those pre-loaded via CSV) have the card silently bound to their existing record, while unknown members are progressively disclosed a second form requesting CIN and Major. Redundant data entry is eliminated for anyone already in the directory.
+* **Enrollment as Check-In:** Registration and attendance are collapsed into a single pass. Any member who completes the onsite flow during a live event is automatically written to the attendance log, removing the need to enroll a member and then immediately re-scan them at the terminal. When no event is active, enrollment still completes and the interface explicitly reports that attendance was *not* recorded, ensuring the operator is never misled about a member's presence.
+* **Identity Collision Guarding:** Defensive checks prevent silent data corruption during self-enrollment. An email that resolves to a record under a different name is refused outright rather than being bound to the wrong person, a member who already owns a registered card is checked in without overwriting their existing credential, and a CIN conflict escalates to a club officer instead of failing to a raw server error.
 * **Active Session Recovery** The dashboard intelligently tracks active event states via secure session cookies. If an admin navigates away from the scanning terminal during a live event, a "Return to Event" gateway ensures they can seamlessly resume the session without losing context or requiring reentry of event details.
 * **Centralized Admin Hub** Complex operations (User Management, NFC Provisioning, Lost & Found) are cleanly decoupled from the main dashboard into a dedicated Admin Tools hub, streamlining the primary interface and preventing desctructive accidental clicks.
 * **Dynamic Event Naming:** Each event can have different names (i.e. Workshop #2, Mock Technical Interview Event, etc.). Allows for separating attendance by event.
@@ -52,7 +55,7 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 
 1. **Download the Release:**
    * Navigate to the **Releases** section on the right side of this GitHub repository.
-   * Download the latest executable file (e.g., `NexusKiosk.exe`).
+   * Download the latest executable file (`NexusKiosk-Win.exe`).
 
 2. **Boot the Kiosk:**
    * Double-click the downloaded executable to launch the application. *(No terminal or dependency installations required).*
@@ -89,7 +92,7 @@ While the application utilizes Supabase for cloud synchronization, it relies on 
 
 ## Database Schema
 
-The kiosk utilizes Supabase (PostgreSQL) for real-time cloud synchronization. To run this application, your database must contain the following two tables:
+The kiosk utilizes Supabase (PostgreSQL) for real-time cloud synchronization. To run this application, your database must contain the following three tables:
 
 
 
