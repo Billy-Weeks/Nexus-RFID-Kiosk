@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>Card Not Recognized</title>
+
+</head>
+
+<body>
+
+    <div class="app-container {{ status }}">
+
+        <h1>{{ message }}</h1>
+        <p>Add this card as a new member?</p>
+
+        <div class="button-stack">
+
+            <!--Confirming promotes the held card into the enrollment flow-->
+            <form action="/confirm_add" method="post">
+                <button type="submit" autofocus>Yes, Add Member</button>
+            </form>
+
+            <a href="/cancel_enroll" class="dash-btn">Cancel</a>
+
+        </div>
+
+    </div>
+
+    <script>
+        /* Nobody should be able to strand the terminal on this screen. If the prompt
+           is ignored, discard the card and return to scanning on its own. */
+
+        setTimeout(() => {
+            window.location.href = '/cancel_enroll';
+        }, 90000);
+    </script>
+
+</body>
+
+</html>

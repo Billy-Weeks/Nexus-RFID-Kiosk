@@ -31,6 +31,12 @@ body {
 	box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
 }
 
+/*	Neither a fresh check-in nor a failure - used for repeat scans	*/
+.warning {
+	border-color: #ffae00;
+	box-shadow: 0 0 30px rgba(255, 174, 0, 0.4);
+}
+
 /*	Styling for buttons as a whole*/
 .button-stack {
 	display: flex;

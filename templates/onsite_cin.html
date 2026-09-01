@@ -45,6 +45,8 @@
 
         </form>
 
+        <a href="/cancel_enroll" class="dash-btn" style="display:inline-block; margin-top:20px">Cancel</a>
+
     </div>
 
     <script>
@@ -56,6 +58,23 @@
                 flashMsg.style.display = 'none';
             }, 3000);
         }
+
+        /* Inactivity guard: if a member starts enrolling and walks away, the terminal
+           must not stay stuck on a half-filled form. Discard and go back after 90s.
+           Typing restarts the clock so nobody is cut off mid-answer. */
+
+        let idleTimer;
+
+        function resetIdle() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                window.location.href = '/cancel_enroll';
+            }, 90000);
+        }
+
+        document.addEventListener('input', resetIdle);
+        document.addEventListener('keydown', resetIdle);
+        resetIdle();
     </script>
 
 </body>

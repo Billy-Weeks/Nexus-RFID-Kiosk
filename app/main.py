@@ -8,6 +8,8 @@ import io ## Wrapping file data to look like file from local machine
 import time ## Used to create delay for synchronization purposes
 import sys ## Used in logic to check if app is being ran as a bundled executable
 
+from datetime import datetime, timezone ## Used to stamp when an event began, for duplicate scan detection
+
 from fastapi import FastAPI, Request, Form, BackgroundTasks ## FastAPI tools for creating app, handling requests, and form data
 from fastapi.templating import Jinja2Templates ## For reading HTML templates
 from fastapi.staticfiles import StaticFiles ## For taking care of static files like CSS
@@ -64,19 +66,42 @@ app.mount("/static", StaticFiles(directory=os.path.join(base_path, "static")), n
 
 
 ##  Helper to record a user's attendance for the event currently stored in the session.
-##  Returns True if a row was actually written, False if no event is running.
 ##  Used by /scan, /onsite_form and /onsite_cin so check-in logic only lives in one place.
-def log_attendance(request: Request, user_id: str) -> bool:
+##  Returns one of:
+##      "recorded"  - a new attendance row was written
+##      "duplicate" - this member was already logged for this event, nothing written
+##      "no_event"  - no event is running, nothing written
+##      "error"     - the database could not be reached, nothing written
+def log_attendance(request: Request, user_id: str) -> str:
 
     event_name = request.session.get("event_name")
 
     ##  No event set means there is nothing to attach attendance to.
     ##  The caller still succeeds, it just tells the user attendance wasn't recorded.
     if not event_name:
-        return False
+        return "no_event"
 
-    supabase.table('attendance_log').insert({"event_name": event_name, "user_id": user_id}).execute()
-    return True
+    ##  When this event was started. Used as the lower bound so that re-running an
+    ##  event under the same name later is treated as a separate occasion.
+    started_at = request.session.get("event_started_at")
+
+    try:
+        ##  Has this member already been logged for this event?
+        already = supabase.table('attendance_log').select('log_id').eq('user_id', user_id).eq('event_name', event_name)
+
+        if started_at:
+            already = already.gte('scan_time', started_at)
+
+        if already.execute().data:
+            return "duplicate"
+
+        supabase.table('attendance_log').insert({"event_name": event_name, "user_id": user_id}).execute()
+
+    except Exception as error:
+        print(f"[attendance] could not log user '{user_id}' for '{event_name}': {error}")
+        return "error"
+
+    return "recorded"
 
 
 ##  Helper to look a member up by the details they can be expected to know.
@@ -246,9 +271,14 @@ def post_event_name(request: Request, event_name: str = Form(...)):
 
     ##  Update the event name in the database
     ##  Progress to scanning page
-    request.session["event_name"]= event_name   
+    request.session["event_name"]= event_name
 
     if request.session.get("event_name"):
+        ##  Stamp when this event began. Duplicate detection looks for a previous scan
+        ##  *since this moment*, so reusing an event name (a weekly meeting, say) starts
+        ##  a fresh window instead of permanently blocking everyone who ever attended.
+        request.session["event_started_at"] = datetime.now(timezone.utc).isoformat()
+
         return RedirectResponse(url="/scan", status_code=303)
 
     else:
@@ -261,6 +291,17 @@ def scan_get(request: Request):
     ## from accessing this page and changing the event name without permission)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code=303) ##   Redirects back to login page if user is not admin
+
+    ##  An enrollment that started from this screen redirects back here with a result
+    ##  to show. index.html reverts itself to the scanning prompt after a few seconds.
+    flash_msg = request.session.pop("flash_msg", "")
+
+    if flash_msg:
+        return templates.TemplateResponse(request=request,
+                                          name="index.html",
+                                          context={"status": request.session.pop("status", "success"),
+                                                   "message": flash_msg,
+                                                   "event_name": request.session.get("event_name")})
 
     return templates.TemplateResponse(request=request,
                                       name="index.html",
@@ -303,23 +344,44 @@ def scan(request: Request, scanned_id: str = Form(...)):
 
     if check.data:
 
-        greeting = f"Welcome, {check.data[0]['first_name']} {check.data[0]['last_name']}!"
+        member_name = f"{check.data[0]['first_name']} {check.data[0]['last_name']}"
 
-        ##  Be honest with the user if there was no event to log them against
-        if not recorded:
-            greeting += " (No active event - attendance not recorded.)"
+        ##  Tailor the screen to what actually happened to their attendance
+        if recorded == "duplicate":
+            ##  Not a failure - they simply tapped twice, or were checked in while
+            ##  being added. Amber rather than red so officers can tell at a glance.
+            status = "warning"
+            greeting = f"You're already checked in, {member_name}."
+
+        elif recorded == "no_event":
+            status = "success"
+            greeting = f"Welcome, {member_name}! (No active event - attendance not recorded.)"
+
+        elif recorded == "error":
+            status = "error"
+            greeting = f"Welcome, {member_name}! (Attendance could not be saved - see an officer.)"
+
+        else:
+            status = "success"
+            greeting = f"Welcome, {member_name}!"
 
         return templates.TemplateResponse(request=request,
                                           name="index.html",
-                                          context={"status": "success",
+                                          context={"status": status,
                                                    "message": greeting,
                                                    "event_name": request.session.get("event_name")})
 
     else:
+        ##  Card isn't on file. Rather than dead-ending, offer to enroll them here and
+        ##  now. The card is held aside until an officer confirms, so a stray tap
+        ##  (building access card, bus pass) can be waved off without touching the database.
+        request.session["unknown_card"] = scanned_id
 
-        return templates.TemplateResponse(request=request,
-                                          name="index.html",
-                                          context={"status": "error", "message": "User not in database.", "event_name": request.session.get("event_name")})
+        ##  Set the return destination now rather than on confirmation, so that
+        ##  cancelling the prompt also comes back to the scanning terminal
+        request.session["enroll_origin"] = "/scan"
+
+        return RedirectResponse(url="/confirm_add", status_code=303)
 
 @app.get("/logout")
 def logout(request: Request):
@@ -341,7 +403,11 @@ def end_event(request: Request):
         return RedirectResponse(url="/admin", status_code=303)
 
     ##  Remove event name from .session dictionary to reset for next event
-    request.session.pop("event_name", None) 
+    request.session.pop("event_name", None)
+
+    ##  Clear the start stamp too, so the next event gets a fresh duplicate window
+    request.session.pop("event_started_at", None)
+
     return templates.TemplateResponse(request=request,
                                       name="end.html",
                                       context={"message": "Ending Event ...."})
@@ -351,6 +417,54 @@ def add_users(request: Request):
     return templates.TemplateResponse(request=request,
                                       name="add_users.html",
                                       context={})
+
+@app.get("/confirm_add")
+def confirm_add_get(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    ##  Nothing pending means somebody navigated here directly
+    if not request.session.get("unknown_card"):
+        return RedirectResponse(url="/scan", status_code=303)
+
+    return templates.TemplateResponse(request=request,
+                                      name="confirm_add.html",
+                                      context={"status": "warning",
+                                               "message": "Card not recognized."})
+
+@app.post("/confirm_add")
+def confirm_add_post(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    card_id = request.session.pop("unknown_card", None)
+
+    if not card_id:
+        return RedirectResponse(url="/scan", status_code=303)
+
+    ##  Officer confirmed, so promote the held card into the enrollment flow.
+    ##  enroll_origin was already set to /scan when the card was held aside.
+    request.session["card_id"] = card_id
+
+    return RedirectResponse(url="/onsite_form", status_code=303)
+
+@app.get("/cancel_enroll")
+def cancel_enroll(request: Request):
+    ##  Check to see if user is admin (security measure to prevent malicious users)
+    if not request.session.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=303)
+
+    ##  Abandon any half-finished enrollment. Reached by the Cancel button and by the
+    ##  inactivity timeout, so a member who walks away can't leave the kiosk stranded.
+    request.session.pop("unknown_card", None)
+    request.session.pop("card_id", None)
+    request.session.pop("pending_first", None)
+    request.session.pop("pending_last", None)
+    request.session.pop("pending_email", None)
+
+    return RedirectResponse(url=request.session.pop("enroll_origin", "/add_onsite"), status_code=303)
 
 @app.get("/add_onsite")
 def onsite_get(request: Request):
@@ -393,6 +507,11 @@ def onsite_post(request: Request, scanned_id: str = Form(...)):
                                           context={"status": "error", "message": "Card id already exists ... Please scan another."})
     ##  If card id is not in the database
     request.session["card_id"] = scanned_id
+
+    ##  This enrollment belongs to the add-users terminal, so drop any leftover
+    ##  destination from an earlier enrollment that began at the scanning screen
+    request.session.pop("enroll_origin", None)
+
     return RedirectResponse(url="/onsite_form", status_code = 303)
 
 @app.get("/onsite_form")
@@ -415,6 +534,12 @@ def onsite_form_get(request: Request):
                                         context={'first': first, 'last': last,
                                                 'email': email,
                                                 'status': status, 'message': message})
+
+##  Where an in-progress enrollment should return to once it finishes or is abandoned.
+##  Defaults to the add-users terminal, but becomes /scan when the flow was entered by
+##  tapping an unrecognized card at check-in.
+def enroll_return(request: Request) -> str:
+    return request.session.pop("enroll_origin", "/add_onsite")
 
 @app.post("/onsite_form")
 def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(...), email: str = Form(...)):
@@ -465,8 +590,14 @@ def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(
     ##  Enrolling doubles as a check-in for the running event
     recorded = log_attendance(request, member['user_id'])
 
-    if recorded:
+    if recorded == "recorded":
         flash += " and you're checked in!"
+
+    elif recorded == "duplicate":
+        flash += " - you were already checked in."
+
+    elif recorded == "error":
+        flash += " (attendance could not be saved - see an officer)."
 
     else:
         flash += " (no active event - attendance not recorded)."
@@ -475,8 +606,8 @@ def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(
     request.session.pop("card_id", None)
     request.session["flash_msg"] = flash
 
-    ## redirect back to scanning page with success message
-    return RedirectResponse(url="/add_onsite", status_code = 303)
+    ## redirect back to whichever terminal started this enrollment
+    return RedirectResponse(url=enroll_return(request), status_code = 303)
 
 @app.get("/onsite_cin")
 def onsite_cin_get(request: Request):
@@ -548,10 +679,15 @@ def onsite_cin_post(request: Request, cin: str = Form(...), major: str = Form(..
 
     flash = f"{new_user['first_name']} {new_user['last_name']} has been successfully added to the database"
 
-    if recorded:
+    if recorded == "recorded":
         flash += " and checked in!"
 
+    elif recorded == "error":
+        flash += " (attendance could not be saved - see an officer)."
+
     else:
+        ##  A brand new member cannot already be checked in, so anything other than a
+        ##  successful write means there was no event running
         flash += " (no active event - attendance not recorded)."
 
     ##  Everything is written, clear the in-progress details for the next member
@@ -561,8 +697,8 @@ def onsite_cin_post(request: Request, cin: str = Form(...), major: str = Form(..
     request.session.pop("pending_email", None)
     request.session["flash_msg"] = flash
 
-    ## redirect back to scanning page with success message
-    return RedirectResponse(url="/add_onsite", status_code = 303)
+    ## redirect back to whichever terminal started this enrollment
+    return RedirectResponse(url=enroll_return(request), status_code = 303)
 
 @app.get("/bulk_import")
 def bulk_import_get(request: Request):
