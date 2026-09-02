@@ -680,7 +680,7 @@ def onsite_cin_post(request: Request, cin: str = Form(...), major: str = Form(..
     flash = f"{new_user['first_name']} {new_user['last_name']} has been successfully added to the database"
 
     if recorded == "recorded":
-        flash += " and checked in!"
+        flash += "\nand checked in!"
 
     elif recorded == "error":
         flash += " (attendance could not be saved - see an officer)."
@@ -688,7 +688,7 @@ def onsite_cin_post(request: Request, cin: str = Form(...), major: str = Form(..
     else:
         ##  A brand new member cannot already be checked in, so anything other than a
         ##  successful write means there was no event running
-        flash += " (no active event - attendance not recorded)."
+        flash += " (no active event, attendance not recorded)."
 
     ##  Everything is written, clear the in-progress details for the next member
     request.session.pop("card_id", None)
