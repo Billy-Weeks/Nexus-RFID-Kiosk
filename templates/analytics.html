@@ -23,7 +23,7 @@
         <h2>Event Attendance for {{ ev_name }}</h2>
         <!--Rest of the logic to display attendance data-->
         <div class="terminal-feed">
-            
+
             {% for entry in current_data %}
             <div class="entry">
 
@@ -35,12 +35,16 @@
             {% endfor %}
         </div>
 
+        <h3 id="attendance_count">Current Attendance: {{ attendance_count }} TIPSE members</h3>
+
+
+
         {% endif %}
 
         <!--Past Events button-->
         <div class="button-stack">
-            {% if ev_name %} 
-                <a href="/scan" class="dash-btn">Back to Scanning</a>
+            {% if ev_name %}
+            <a href="/scan" class="dash-btn">Back to Scanning</a>
             {% endif %}
             <a href="/history" class="dash-btn">Access Event Archive</a>
             <a href="/admin_tools" class="dash-btn">Return to Tools</a>
@@ -60,8 +64,11 @@
 
         const response = await fetch('/api/live-attendance');
         const newData = await response.json();
+        const feedCount = document.querySelector('#attendance_count');
+
 
         feedContainer.innerHTML = '';
+        feedCount.innerHTML = "Current Attendance: " + newData.length + " TIPSE members"; 
 
         newData.forEach(entry => {
             

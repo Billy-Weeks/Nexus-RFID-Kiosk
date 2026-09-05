@@ -24,6 +24,8 @@ https://github.com/user-attachments/assets/b95fa574-d1e3-47b6-b3eb-73bdc5b81451
 * **Secure Admin Provisioning** Dedicated `/admin_tools` workflow for registering new system administrators with First Name, Last Name, Club Role, and a uniquely assigned NFC credential.
 * **Live Attendance Dashboard** A real-time, terminal-styled interface that asynchronously tracks event check-ins. It automatically fetches and updates the screen with new scans every few seconds without ever requiring a manual page refresh.
 * **Historical Event Archive** A dedicated analytics portal allowing administrators to query and review attendance records for any past event. It features a defensive-programmed UI that dynamically populates dropdown menus based on real database records.
+* **Card Flexibility** Kiosk now supports a wide variety of RFID/NFC card types, including School ID cards, allowing for clubs to be cost effective and use already issued School ID's as club check-in tool. Student identity is still protected as ONLY the card id is recorded and used to confirm membership.
+* **Attendance Counts** Analytics portal now includes a live count of total attendance for each event and historical events.
 
 
 

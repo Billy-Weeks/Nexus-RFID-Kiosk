@@ -1037,7 +1037,8 @@ def get_analytics(request:Request):
                                       name="analytics.html",
                                       context={'current_data': current_data,
                                                'ev_name': current_event,
-                                               'error': error})
+                                               'error': error,
+                                               'attendance_count': len(current_data)})
 
 ##  API route to grab current event attendance data for analytics page
 @app.get("/api/live-attendance")
@@ -1100,5 +1101,6 @@ def post_history(request:Request, event: str = Form(...)):
                                       context={'events': events,
                                                'selected_event': event_data,
                                                'event_name': event,
-                                               'error': error or list_error})
+                                               'error': error or list_error,
+                                               'attendance_count': len(event_data)})
 
