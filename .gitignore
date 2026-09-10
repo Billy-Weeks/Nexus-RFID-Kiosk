@@ -208,3 +208,6 @@ __marimo__/
 
 # .vs
 .vs/
+
+# Local project progress notes (never commit)
+codex-worklog.md

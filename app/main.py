@@ -104,26 +104,36 @@ def log_attendance(request: Request, user_id: str) -> str:
     return "recorded"
 
 
-##  Helper to look a member up by the details they can be expected to know.
-##  Email is the near-unique key, so we search on that and then confirm the name.
-##  Returns (user_row_or_None, name_matched) so the caller can tell the difference
-##  between "confirmed this person" and "that email belongs to somebody else".
-def find_member(first: str, last: str, email: str):
+##  Helper to look a member up by authoritative identifiers.
+##  CIN is checked first. Email is only used when no CIN row exists.
+##  Returns (user_row_or_None, match_type).
+def find_member(cin: str, email: str):
 
-    ##  ilike gives us a case-insensitive match on the email
-    result = supabase.table('users').select('*').ilike('email', email.strip()).execute()
+    cin = cin.strip()
+    email = email.strip()
 
-    if not result.data:
-        return None, False
+    ##  Search CIN first because it is the primary source of truth.
+    cin_result = supabase.table('users').select('*').eq('cin', cin).execute()
 
-    ##  Look for a row where the typed name also lines up (ignoring case/extra spaces)
-    for row in result.data:
-        if (str(row.get('first_name', '')).strip().lower() == first.strip().lower()
-                and str(row.get('last_name', '')).strip().lower() == last.strip().lower()):
-            return row, True
+    if cin_result.data:
+        cin_member = cin_result.data[0]
 
-    ##  Email is on file but under a different name, let the caller refuse the request
-    return result.data[0], False
+        ##  CIN identifies the member, but a conflicting email needs attention.
+        if str(cin_member.get('email', '')).strip().lower() == email.lower():
+            return cin_member, "cin_match"
+
+        return cin_member, "conflict"
+
+    ##  CIN was not found, so use email as the secondary lookup.
+    email_result = supabase.table('users').select('*').ilike('email', email).execute()
+
+    if len(email_result.data) == 1:
+        return email_result.data[0], "email_match"
+
+    if len(email_result.data) > 1:
+        return None, "ambiguous_email"
+
+    return None, "not_found"
 
 
 ##  Helper to pull the attendance feed for a single event.
@@ -462,6 +472,7 @@ def cancel_enroll(request: Request):
     request.session.pop("card_id", None)
     request.session.pop("pending_first", None)
     request.session.pop("pending_last", None)
+    request.session.pop("pending_cin", None)
     request.session.pop("pending_email", None)
 
     return RedirectResponse(url=request.session.pop("enroll_origin", "/add_onsite"), status_code=303)
@@ -523,6 +534,7 @@ def onsite_form_get(request: Request):
     ##  Unpack .session variables (if populated)
     first = request.session.pop("first", "")
     last = request.session.pop("last", "")
+    cin = request.session.pop("cin", "")
     email = request.session.pop("email", "")
     message = request.session.pop("flash_msg", "")
     status = request.session.pop("status", "")
@@ -532,6 +544,7 @@ def onsite_form_get(request: Request):
     return templates.TemplateResponse(request=request,
                                         name="onsite_form.html",
                                         context={'first': first, 'last': last,
+                                                'cin': cin,
                                                 'email': email,
                                                 'status': status, 'message': message})
 
@@ -542,7 +555,8 @@ def enroll_return(request: Request) -> str:
     return request.session.pop("enroll_origin", "/add_onsite")
 
 @app.post("/onsite_form")
-def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(...), email: str = Form(...)):
+def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(...),
+                     cin: str = Form(...), email: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicious users)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code = 303)
@@ -554,18 +568,30 @@ def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(
     if not card_id:
         return RedirectResponse(url="/add_onsite", status_code = 303)
 
-    ##  Use the details the member typed to see if we already have them on file
-    member, name_matched = find_member(first, last, email)
+    ##  Use CIN first, then email, to see if we already have this member on file.
+    member, match_type = find_member(cin, email)
 
-    ##  Email belongs to somebody with a different name.
-    ##  Refuse rather than risk attaching this card to the wrong person.
-    if member and not name_matched:
+    ##  CIN and email do not identify the same person.
+    if match_type == "conflict":
         request.session["flash_msg"] = "Those details don't match our records. Please check your spelling."
         request.session["status"] = "error"
 
-        ##  Prepare valid data to be retransmitted without user having to do it
+    ##  CIN was not found, but email belongs to an existing member. Never
+    ##  overwrite that member's authoritative CIN; ask for a correction.
+    elif match_type == "email_match" and member.get('cin'):
+        request.session["flash_msg"] = "That CIN does not match our records. Please re-enter it carefully or see an officer."
+        request.session["status"] = "error"
+
+    ##  A non-unique email cannot safely identify a member.
+    elif match_type == "ambiguous_email":
+        request.session["flash_msg"] = "That email matches multiple records. Please see an officer."
+        request.session["status"] = "error"
+
+    if match_type in {"conflict", "email_match", "ambiguous_email"}:
+        ##  Preserve all entered values so the member can correct the form.
         request.session['first'] = first
         request.session['last'] = last
+        request.session['cin'] = cin
         request.session['email'] = email
 
         return RedirectResponse(url="/onsite_form", status_code=303)
@@ -574,6 +600,7 @@ def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(
     if not member:
         request.session['pending_first'] = first
         request.session['pending_last'] = last
+        request.session['pending_cin'] = cin.strip()
         request.session['pending_email'] = email
 
         return RedirectResponse(url="/onsite_cin", status_code=303)
@@ -581,7 +608,14 @@ def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(
     ##  From here we have confirmed the member. Attach the card only if they don't
     ##  already have one on file (a card already registered stays untouched).
     if not member.get('card_id'):
-        supabase.table('users').update({'card_id': card_id}).eq('user_id', member['user_id']).execute()
+        update_values = {'card_id': card_id}
+
+        ##  Defensive support for a legacy row with no CIN. The documented
+        ##  schema makes CIN non-null, so this should rarely apply.
+        if not member.get('cin'):
+            update_values['cin'] = cin.strip()
+
+        supabase.table('users').update(update_values).eq('user_id', member['user_id']).execute()
         flash = f"Welcome, {member['first_name']}! Card registered"
 
     else:
@@ -600,7 +634,7 @@ def onsite_form_post(request: Request, first: str = Form(...), last: str = Form(
         flash += " (attendance could not be saved - see an officer)."
 
     else:
-        flash += " (no active event - attendance not recorded)."
+        flash += " (\nno active event - attendance not recorded)."
 
     ##  Card has been dealt with, clear it so the next member starts fresh
     request.session.pop("card_id", None)
@@ -616,7 +650,9 @@ def onsite_cin_get(request: Request):
         return RedirectResponse(url="/admin", status_code = 303)
 
     ##  Block direct navigation, this page only makes sense mid-flow
-    if not request.session.get("card_id") or not request.session.get("pending_first"):
+    if (not request.session.get("card_id")
+            or not request.session.get("pending_first")
+            or not request.session.get("pending_cin")):
         return RedirectResponse(url="/add_onsite", status_code = 303)
 
     ##  Unpack .session variables (if populated)
@@ -631,7 +667,7 @@ def onsite_cin_get(request: Request):
                                                'status': status, 'message': message})
 
 @app.post("/onsite_cin")
-def onsite_cin_post(request: Request, cin: str = Form(...), major: str = Form(...)):
+def onsite_cin_post(request: Request, major: str = Form(...)):
     ##  Check to see if user is admin (security measure to prevent malicious users)
     if not request.session.get("is_admin"):
         return RedirectResponse(url="/admin", status_code = 303)
@@ -639,11 +675,13 @@ def onsite_cin_post(request: Request, cin: str = Form(...), major: str = Form(..
     card_id = request.session.get("card_id")
 
     ##  Block direct navigation, this page only makes sense mid-flow
-    if not card_id or not request.session.get("pending_first"):
+    cin = request.session.get("pending_cin")
+
+    if not card_id or not request.session.get("pending_first") or not cin:
         return RedirectResponse(url="/add_onsite", status_code = 303)
 
     ##  Security check to ensure CIN, which needs to be unique, hasn't already been used
-    cin_exists = supabase.table('users').select('*').eq('cin', cin).execute()
+    cin_exists = supabase.table('users').select('*').eq('cin', cin.strip()).execute()
 
     if cin_exists.data:
         ##  Their record exists but under a name/email that doesn't match what they typed,
@@ -660,7 +698,7 @@ def onsite_cin_post(request: Request, cin: str = Form(...), major: str = Form(..
     new_user = {"card_id": card_id,
                 "first_name": request.session.get("pending_first"),
                 "last_name": request.session.get("pending_last"),
-                "cin": cin, "major": major,
+                "cin": cin.strip(), "major": major,
                 "email": request.session.get("pending_email")}
 
     ##  Wrapped so a race on the unique constraints shows an error instead of a 500
@@ -694,6 +732,7 @@ def onsite_cin_post(request: Request, cin: str = Form(...), major: str = Form(..
     request.session.pop("card_id", None)
     request.session.pop("pending_first", None)
     request.session.pop("pending_last", None)
+    request.session.pop("pending_cin", None)
     request.session.pop("pending_email", None)
     request.session["flash_msg"] = flash
 
