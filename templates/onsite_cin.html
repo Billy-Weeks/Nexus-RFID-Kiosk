@@ -22,13 +22,6 @@
 
                 <div class="field-style">
 
-                    <label for="cin-input">CIN</label>
-                    <input type="text" id="cin-input" name="cin" required autofocus autocomplete="off" placeholder="1234567" />
-
-                </div>
-
-                <div class="field-style">
-
                     <label for="major">Major</label>
                     <input type="text" id="major" name="major" required autocomplete="off" placeholder="Computer Science" value="{{ major }}" />
 
@@ -69,7 +62,7 @@
             clearTimeout(idleTimer);
             idleTimer = setTimeout(() => {
                 window.location.href = '/cancel_enroll';
-            }, 90000);
+            }, 45000);
         }
 
         document.addEventListener('input', resetIdle);

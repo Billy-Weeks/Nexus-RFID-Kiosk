@@ -34,6 +34,13 @@
 
                 <div class="field-style">
 
+                    <label for="cin-input">CIN</label>
+                    <input type="text" id="cin-input" name="cin" required autofocus autocomplete="off" placeholder="1234567" value="{{ cin }}" />
+
+                </div>
+
+                <div class="field-style">
+
                     <label for="email-input">Email</label>
                     <input type="text" id="email-input" name="email" required autocomplete="off" placeholder="eeagle01@calstatela.edu" value="{{ email }}"/>
 
@@ -74,7 +81,7 @@
             clearTimeout(idleTimer);
             idleTimer = setTimeout(() => {
                 window.location.href = '/cancel_enroll';
-            }, 90000);
+            }, 45000);
         }
 
         document.addEventListener('input', resetIdle);
